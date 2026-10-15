@@ -42,7 +42,7 @@
 body {
     display: flex;
     justify-content: center;
-    height: 100vh;
+    min-height: 100vh;
 
     background-color: #222222;
 }
@@ -56,6 +56,14 @@ main {
 a  { color: var(--TEXT-BASE); }
 p  { font-size: 1.0rem; }
 h1 { font-size: 2.25rem; }
+@media screen and (width < 500px) {
+    h1 { font-size: 1.8rem; }
+    p  { font-size: 0.9rem; }
+}
+@media screen and (width < 365px) {
+    h1 { font-size: 1.4rem; }
+    p  { font-size: 0.9rem; }
+}
 
 
 
@@ -115,21 +123,39 @@ header.section-base {
     border-radius: 0 0 15px 15px;
 
     p { 
-        margin-right: 12.5px;
+        margin-right: 0.55em;
         padding: 0px;
-        font-size: 1.5em;
+        font-size: 1.5rem;
     }
+    p:last-child { margin-right: 0em; }
 }
 header.section-base:hover { top: 0px; }
+@media screen and (width < 500px) {
+    header.section-base p { 
+        font-size: 1.2rem;
+    }
+}
+@media screen and (width < 365px) {
+    header.section-base p { 
+        font-size: 0.9rem;
+    }
+}
 
 
 
-footer { 
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-
-    color: #555555;
-    font-size: 0.8rem;
-    text-align: center;
+footer {
+    
+    
+    div { 
+        height: 3.0rem;
+    }
+    p {
+        position: absolute;
+        bottom: 0.5rem;
+        width: 100%;
+        
+        color: #555555;
+        font-size: 0.8rem;
+        text-align: center;
+    }
 }
