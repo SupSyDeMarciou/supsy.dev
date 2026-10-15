@@ -1,0 +1,135 @@
+:root {
+    --CONTENT-WIDTH:  800px;
+    --TEXT-BASE:      #CCCCCC;
+    --TEXT-HOVER:     #EEEEEE;
+    --TEXT-ACCENT:    #CC5555;
+    --SECTION-BASE:   #333333;
+    --SECTION-HOVER:  #383838;
+    --SECTION-SHADOW: #282828;
+}
+
+.atkinson-hyperlegible-mono {
+  font-family: "Atkinson Hyperlegible Mono", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.no-select {
+    /* https://stackoverflow.com/a/4407335 */
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select:   none; /* Safari */
+     -khtml-user-select:   none; /* Konqueror HTML */
+       -moz-user-select:   none; /* Old versions of Firefox */
+        -ms-user-select:   none; /* Internet Explorer/Edge */
+            user-select:   none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
+
+
+
+* {
+    padding: 0;
+    margin: 0;
+    
+/* <FONT> */
+    font-family: "Atkinson Hyperlegible Mono", sans-serif;
+    font-optical-sizing: auto;
+    /* font-weight: 300; */
+    /* font-style: normal; */
+/* </FONT> */
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+
+    background-color: #222222;
+}
+main {
+    position: relative;
+    min-height: 100%;
+    margin: 0px 10px;
+    width: var(--CONTENT-WIDTH);
+    color: var(--TEXT-BASE);
+}
+a  { color: var(--TEXT-BASE); }
+p  { font-size: 1.0rem; }
+h1 { font-size: 2.25rem; }
+
+
+
+.text-base {
+    color: var(--TEXT-BASE);
+}
+.text-accent {
+    color: var(--TEXT-ACCENT);
+}
+.section-base {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    top: 0px;
+    margin: 15px 0px;
+    padding: 12.5px;
+
+    background-color: var(--SECTION-BASE);
+    border-radius: 15px;
+    filter: drop-shadow(0 8px 0px var(--SECTION-SHADOW));
+
+    transition: all 0.15s ease-in-out;
+
+    p, a, h1 {
+        text-decoration-line: none;
+        text-decoration-thickness: 1.5px;
+        text-underline-offset: 2.5px;
+
+        transition: all 0.15s ease-in-out;
+    }
+    a:hover {
+        color: var(--TEXT-HOVER);
+        text-decoration-line: underline;
+        text-decoration-color: var(--TEXT-HOVER);
+    }
+
+    h1           { padding-bottom: 1.0rem; }
+    p            { padding-bottom: 0.6rem; }
+    p:last-child { padding-bottom: 0.0rem; }
+    ul           { padding-left:   1.0rem; }
+}
+.section-base:hover {
+    top: 2px;
+    background-color: var(--SECTION-HOVER);
+    filter: drop-shadow(0 6px 0px var(--SECTION-SHADOW));
+}
+
+
+
+header.section-base {
+    flex-direction: row;
+    margin-top: 0px;
+    /* TODO: find a ways to make pressing work with page scroll */
+    position: sticky;
+    
+    z-index: 1;
+    border-radius: 0 0 15px 15px;
+
+    p { 
+        margin-right: 12.5px;
+        padding: 0px;
+        font-size: 1.5em;
+    }
+}
+header.section-base:hover { top: 0px; }
+
+
+
+footer { 
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+
+    color: #555555;
+    font-size: 0.8rem;
+    text-align: center;
+}
