@@ -3,9 +3,18 @@
     --TEXT-BASE:      #CCCCCC;
     --TEXT-HOVER:     #EEEEEE;
     --TEXT-ACCENT:    #CC5555;
+    --TEXT-CODE:      #CC5555;
+    --BG-CODE:        #352B2B;
+    --BG-CODE-HOVER:  #383030;
+    --BG-CODE-SHADOW: #282020;
     --SECTION-BASE:   #333333;
     --SECTION-HOVER:  #383838;
+    --SECTION-HOVER2: #3F3F3F;
+    --SECTION-HOVER3: #454545;
     --SECTION-SHADOW: #282828;
+
+    --INFO-BASE:       var(--SECTION-HOVER2);
+    --INFO-HOVER:      var(--SECTION-HOVER3);
 }
 
 .atkinson-hyperlegible-mono {
@@ -28,8 +37,10 @@
 
 
 * {
+    min-width: 0;
     padding: 0;
     margin: 0;
+    transition: all 0.15s ease-in-out;
     
 /* <FONT> */
     font-family: "Atkinson Hyperlegible Mono", sans-serif;
@@ -65,8 +76,6 @@ h1 { font-size: 2.25rem; }
     p  { font-size: 0.9rem; }
 }
 
-
-
 .text-base {
     color: var(--TEXT-BASE);
 }
@@ -85,14 +94,10 @@ h1 { font-size: 2.25rem; }
     border-radius: 15px;
     filter: drop-shadow(0 8px 0px var(--SECTION-SHADOW));
 
-    transition: all 0.15s ease-in-out;
-
-    p, a, h1 {
+    p, a, h1, h2, h3, h4 {
         text-decoration-line: none;
         text-decoration-thickness: 1.5px;
         text-underline-offset: 2.5px;
-
-        transition: all 0.15s ease-in-out;
     }
     a:hover {
         color: var(--TEXT-HOVER);
@@ -100,11 +105,68 @@ h1 { font-size: 2.25rem; }
         text-decoration-color: var(--TEXT-HOVER);
     }
 
-    h1           { padding-bottom: 1.0rem; }
-    p            { padding-bottom: 0.6rem; }
-    p:last-child { padding-bottom: 0.0rem; }
-    ul           { padding-left:   1.0rem; }
+    h1, h2, h3, h4 { padding-bottom: 1.0rem; }
+    p              { padding-bottom: 0.6rem; }
+    /* p:last-child   { padding-bottom: 0.0rem; } */
+    ul, ol         { padding-left:   2.0em; }
+
+    code {
+        position: relative;
+        top: -2px;
+        padding: 0px 4px;
+        /* padding: 2px; */
+
+        color: var(--TEXT-CODE);
+        background-color: var(--BG-CODE);
+        border-radius: 5px;
+        filter: drop-shadow(0 4px 0px var(--BG-CODE-SHADOW));
+    }
+    code:hover {
+        top: 0px;
+        background-color: var(--BG-CODE-HOVER);
+        filter: drop-shadow(0 2px 0px var(--BG-CODE-SHADOW));
+    }
+
+    hgroup {
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        top: 0px;
+        margin: 15px 0px;
+        padding: 12.5px;
+
+        background-color: var(--INFO-BASE);
+        border-radius: 15px;
+        filter: drop-shadow(0 8px 0px var(--SECTION-SHADOW));
+    }
+    hgroup:hover {
+        top: 2px;
+        background-color: var(--INFO-HOVER);
+        filter: drop-shadow(0 6px 0px var(--SECTION-SHADOW));
+    }
+
+    pre.code-box {
+        position: relative;
+        width: 100%;
+        top: 0px;
+        margin: 1rem 0rem;
+
+        color: var(--TEXT-CODE);
+        background-color: var(--BG-CODE);
+        border-radius: 5px;
+        filter: drop-shadow(0 -4px 0px var(--BG-CODE-SHADOW));
+        
+        overflow-x: scroll;
+        scrollbar-color: var(--TEXT-ACCENT) #00000000;
+        scrollbar-width: thin;
+    }
+    pre.code-box:hover {
+        top: 2px;
+        /* background-color: var(--BG-CODE-HOVER); */
+        filter: drop-shadow(0 -6px 0px var(--BG-CODE-SHADOW));
+    }
 }
+.section-base:last-child { padding-bottom: 0.0rem; }
 .section-base:hover {
     top: 2px;
     background-color: var(--SECTION-HOVER);
@@ -144,8 +206,6 @@ header.section-base:hover { top: 0px; }
 
 
 footer {
-    
-    
     div { 
         height: 3.0rem;
     }

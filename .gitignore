@@ -1,1 +1,18 @@
+# -------- # Ignore all, then unignore files with extension and directories
+*
+!*.*
+!*/
+
+# -------- # Ignore files derived from the build process
+
+*/build/*
+*/bin/*
+*.old
+*.exe
+*.o
+*.a
+
+# -------- #
+
+.clangd
 supsy.dev-ssl-bundle.zip
