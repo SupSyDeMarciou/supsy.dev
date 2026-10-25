@@ -279,7 +279,7 @@ g_text parse_md_text(md_reader *md, g_text_type *type)
 
 bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pindent, int box_depth)
 {
-    usize ordered_label = 0;
+    usize ordered_label_length = 0;
     switch (md_at(md)) {
         case '\0': arrayAdd(*elements, g_elem_(ELEM_BREAK, md->loc)); break;
 
@@ -334,8 +334,8 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
         case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9': 
         {
-            do ++ordered_label; while (isdigit(md_at(md, ordered_label)));
-            if (md_at(md, ordered_label) != '.' || !isspace(md_at(md, ordered_label + 1))) goto TEXT;
+            do ++ordered_label_length; while (isdigit(md_at(md, ordered_label_length)));
+            if (md_at(md, ordered_label_length) != '.' || !isspace(md_at(md, ordered_label_length + 1))) goto TEXT;
             goto LIST;
         } 
         case '-':
@@ -348,7 +348,7 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
 
                 file_loc list_loc = md->loc;
                 g_list *list = arrayAdd(md->list_stack, ((g_list) {
-                    .indent = cindent, .is_ordered = ordered_label > 0
+                    .indent = cindent, .is_ordered = ordered_label_length > 0
                 }));
 
                 while (
@@ -379,9 +379,9 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
 
             printf("[LIST] Adding new item\n");
             
-            arrayAdd(*elements, g_elem_(ELEM_LIST_ITEM, md->loc, .li.is_ordered = ordered_label > 0));
+            arrayAdd(*elements, g_elem_(ELEM_LIST_ITEM, md->loc, .li.is_ordered = ordered_label_length > 0));
             
-            md_mv(md, ordered_label);
+            md_mv(md, ordered_label_length);
             do md_mv(md, 1); while (md_at(md) == ' ');
             return parse_md_elem(md, &arrayLast(md->list_stack)->items, cindent, arrayLast(md->list_stack)->indent, box_depth);
         } break;
@@ -470,7 +470,7 @@ bool generate_html_text(FILE *f, g_text text)
     
     if (text.type & TEXT_BOLD)   fputs("<b>", f);
     if (text.type & TEXT_ITALIC) fputs("<i>", f);
-    if (text.type & TEXT_CODE)   fputs("<code>", f);
+    if (text.type & TEXT_CODE)   fputs("<code class=\"inline\">", f);
     for (char *p = text.str; *p; ++p)
     {
         if      (*p == '&') fputs("&amp", f);
@@ -484,7 +484,7 @@ bool generate_html_text(FILE *f, g_text text)
     return false;
 }
 
-void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first)
+void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first, bool direct_section_descendant)
 {
     switch (elem.type)
     {
@@ -501,7 +501,7 @@ void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first)
                     fprintf(f, "%*s<li>\n", ((int)depth + 1) * 4, "");
                 }
 
-                generate_html_elem(f, depth + 2, *el, false);
+                generate_html_elem(f, depth + 2, *el, false, false);
             }
             fprintf(f, "%*s</li>\n", ((int)depth + 1) * 4, "");
             fprintf(f, "%*s</%cl>\n", (int)depth * 4, "", uo);
@@ -521,35 +521,56 @@ void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first)
         case ELEM_TITLE: 
         {
             if (!first && elem.ti.depth == 1) {
-                fprintf(f, "%*s</section>", ((int)depth - 1) * 4, "");
-                fprintf(f, "%*s<section class=\"section-base blog\">", ((int)depth - 1) * 4, "");
+                fprintf(f, "%*s</section>\n", ((int)depth - 1) * 4, "");
+                fprintf(f, "%*s<section class=\"section-base blog\">\n", ((int)depth - 1) * 4, "");
             }
 
-            fprintf(f, "%*s<h%zu>", (int)depth * 4, "", elem.ti.depth);
+            usize id = 0;
+            if (direct_section_descendant)
+            {
+                while (elem.ti.text.data[0].str[id] && !isspace(elem.ti.text.data[0].str[id])) ++id;
+                if (elem.ti.text.data[0].str[id - 1] == '.') --id;
+
+                fprintf(f, 
+                    "%*s<h%zu id=\"%.*s\">", (int)depth * 4, "", 
+                    elem.ti.depth, (int)id, elem.ti.text.data[0].str
+                );
+            }
+            else fprintf(f, "%*s<h%zu>", (int)depth * 4, "", elem.ti.depth);
             aforeach(text, elem.ti.text) generate_html_text(f, *text);
+            
+            
+            if (direct_section_descendant)
+            {
+                fprintf(f, 
+                    " <a class=\"chapter\" href=\"#%.*s\">#</a>",
+                    (int)id, elem.ti.text.data[0].str
+                );
+            }
             fprintf(f, "</h%zu>\n", elem.ti.depth);
         } break;
 
         case ELEM_CODE:
         {
-            fprintf(f, "%*s<pre class=\"code-box\">\n", (int)depth * 4, "");
+            fprintf(f, "%*s<pre class=\"code-box\"><code class=\"language-%s\">", (int)depth * 4, "", strlower(elem.co.language));
             aforeach(line, elem.co.lines) {
+                if (aindex(line)) fputc('\n', f);
                 for (char *p = *line; *p; ++p)
                 {
                     if      (*p == '&') fputs("&amp", f);
                     else if (*p == '<') fputs("&lt", f);
                     else                fputc(*p, f);
                 }
-                fputc('\n', f);
             }
-            fprintf(f, "%*s</pre>\n", (int)depth * 4, "");
+            fprintf(f, "</code></pre>\n");
+            // fprintf(f, "%*s</code></pre>\n", (int)depth * 4, "");
         } break;
 
         case ELEM_BOX:
         {
             fprintf(f, "%*s<hgroup>\n", (int)depth * 4, "");
             // fprintf(f, "%*s<div class=\"box\">\n", (int)depth * 4, "");
-            aforeach(el, elem.bx.items) generate_html_elem(f, depth + 1, *el, false);
+            aforeach(el, elem.bx.items) generate_html_elem(f, depth + 1, *el, false, false);
             fprintf(f, "%*s</hgroup>\n", (int)depth * 4, "");
             // fprintf(f, "%*s</div>\n", (int)depth * 4, "");
         } break;
@@ -570,7 +591,8 @@ void generate_html(const char *output_path, array(g_elem) elements)
         "<head>\n"
         "    <meta charset=\"UTF-8\">\n"
         "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-        "    <link rel=\"stylesheet\" href=\"../style.css\" type=\"text/css\">\n"
+        "    <link rel=\"stylesheet\" href=\"../style.css\" type=\"text/css\"/>\n"
+        "    <link rel=\"stylesheet\" href=\"../external/prism.css\"/>"
         "    <!-- <link rel=\"icon\" href=\"icons/supsy.png\"> -->\n"
         "    <title>supsy.dev</title>\n"
         "    <!-- <FONT> -->\n"
@@ -591,10 +613,11 @@ void generate_html(const char *output_path, array(g_elem) elements)
         "        <section class=\"section-base blog\">\n"
 
     );
-    aforeach(el, elements) generate_html_elem(f, 3, *el, aindex(el) == 0);
+    aforeach(el, elements) generate_html_elem(f, 3, *el, aindex(el) == 0, true);
     fprintf(f,
         "        </section>\n"
         "        <footer><div></div><p>Vlad MUNTEANU 2026 - All rights reserved.</p></footer>\n"
+        "        <script src=\"../external/prism.js\"></script>\n"
         "    </main>\n"
         "</body>\n"
         "</html>"

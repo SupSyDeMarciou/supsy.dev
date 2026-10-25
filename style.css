@@ -1,40 +1,19 @@
 :root {
-    --CONTENT-WIDTH:  800px;
+    --CONTENT-WIDTH:  1000px;
     --TEXT-BASE:      #CCCCCC;
+    --TEXT-DIM:       #555555;
     --TEXT-HOVER:     #EEEEEE;
     --TEXT-ACCENT:    #CC5555;
     --TEXT-CODE:      #CC5555;
-    --BG-CODE:        #352B2B;
+    --BG-CODE-BASE:   #352B2B;
     --BG-CODE-HOVER:  #383030;
     --BG-CODE-SHADOW: #282020;
     --SECTION-BASE:   #333333;
     --SECTION-HOVER:  #383838;
-    --SECTION-HOVER2: #3F3F3F;
-    --SECTION-HOVER3: #454545;
     --SECTION-SHADOW: #282828;
-
-    --INFO-BASE:       var(--SECTION-HOVER2);
-    --INFO-HOVER:      var(--SECTION-HOVER3);
+    --INFO-BASE:       #3F3F3F;
+    --INFO-HOVER:      #454545;
 }
-
-.atkinson-hyperlegible-mono {
-  font-family: "Atkinson Hyperlegible Mono", sans-serif;
-  font-optical-sizing: auto;
-  font-weight: 300;
-  font-style: normal;
-}
-
-.no-select {
-    /* https://stackoverflow.com/a/4407335 */
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select:   none; /* Safari */
-     -khtml-user-select:   none; /* Konqueror HTML */
-       -moz-user-select:   none; /* Old versions of Firefox */
-        -ms-user-select:   none; /* Internet Explorer/Edge */
-            user-select:   none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
-}
-
-
 
 * {
     min-width: 0;
@@ -49,6 +28,15 @@
     /* font-style: normal; */
 /* </FONT> */
 }
+.no-select {
+    /* https://stackoverflow.com/a/4407335 */
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select:   none; /* Safari */
+     -khtml-user-select:   none; /* Konqueror HTML */
+       -moz-user-select:   none; /* Old versions of Firefox */
+        -ms-user-select:   none; /* Internet Explorer/Edge */
+            user-select:   none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
 
 body {
     display: flex;
@@ -59,42 +47,46 @@ body {
 }
 main {
     position: relative;
-    min-height: 100%;
     margin: 0px 10px;
     width: var(--CONTENT-WIDTH);
     color: var(--TEXT-BASE);
 }
 a  { color: var(--TEXT-BASE); }
-p  { font-size: 1.0rem; }
+
 h1 { font-size: 2.25rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.15rem; }
+p  { font-size: 1.0rem; }
 @media screen and (width < 500px) {
-    h1 { font-size: 1.8rem; }
-    p  { font-size: 0.9rem; }
+    h1 { font-size: calc(0.9 * 2.25rem); }
+    h2 { font-size: calc(0.9 * 1.5rem); }
+    h3 { font-size: calc(0.9 * 1.15rem); }
+    p  { font-size: calc(0.9 * 1.0rem); }
 }
 @media screen and (width < 365px) {
-    h1 { font-size: 1.4rem; }
-    p  { font-size: 0.9rem; }
+    h1 { font-size: calc(0.8 * 2.25rem); }
+    h2 { font-size: calc(0.8 * 1.5rem); }
+    h3 { font-size: calc(0.8 * 1.15rem); }
+    p  { font-size: calc(0.8 * 1.0rem); }
 }
 
-.text-base {
-    color: var(--TEXT-BASE);
-}
-.text-accent {
-    color: var(--TEXT-ACCENT);
-}
+
+
+.text-base    { color: var(--TEXT-BASE);   }
+.text-accent  { color: var(--TEXT-ACCENT); }
 .section-base {
     display: flex;
     flex-direction: column;
     position: relative;
     top: 0px;
     margin: 15px 0px;
-    padding: 12.5px;
+    padding: 1rem;
 
     background-color: var(--SECTION-BASE);
     border-radius: 15px;
     filter: drop-shadow(0 8px 0px var(--SECTION-SHADOW));
 
-    p, a, h1, h2, h3, h4 {
+    p, a, h1, h2, h3, h4, h5, h6 {
         text-decoration-line: none;
         text-decoration-thickness: 1.5px;
         text-underline-offset: 2.5px;
@@ -104,27 +96,13 @@ h1 { font-size: 2.25rem; }
         text-decoration-line: underline;
         text-decoration-color: var(--TEXT-HOVER);
     }
+    
+    h1, h2, h3 { padding-bottom: 1.0rem; }
+    p          { padding-bottom: 0.6rem; }
+    ul, ol     { padding-left:   2.0em;  }
 
-    h1, h2, h3, h4 { padding-bottom: 1.0rem; }
-    p              { padding-bottom: 0.6rem; }
-    /* p:last-child   { padding-bottom: 0.0rem; } */
-    ul, ol         { padding-left:   2.0em; }
-
-    code {
-        position: relative;
-        top: -2px;
-        padding: 0px 4px;
-        /* padding: 2px; */
-
-        color: var(--TEXT-CODE);
-        background-color: var(--BG-CODE);
-        border-radius: 5px;
-        filter: drop-shadow(0 4px 0px var(--BG-CODE-SHADOW));
-    }
-    code:hover {
-        top: 0px;
-        background-color: var(--BG-CODE-HOVER);
-        filter: drop-shadow(0 2px 0px var(--BG-CODE-SHADOW));
+    .chapter {
+        color: var(--TEXT-DIM);
     }
 
     hgroup {
@@ -145,14 +123,31 @@ h1 { font-size: 2.25rem; }
         filter: drop-shadow(0 6px 0px var(--SECTION-SHADOW));
     }
 
-    pre.code-box {
+    code.inline {
         position: relative;
-        width: 100%;
-        top: 0px;
-        margin: 1rem 0rem;
+        top: -2px;
+        padding: 0px 4px;
+        /* padding: 2px; */
 
         color: var(--TEXT-CODE);
-        background-color: var(--BG-CODE);
+        background-color: var(--BG-CODE-BASE);
+        border-radius: 5px;
+        filter: drop-shadow(0 4px 0px var(--SECTION-SHADOW));
+    }
+    code.inline:hover {
+        top: 0px;
+        background-color: var(--BG-CODE-HOVER);
+        filter: drop-shadow(0 2px 0px var(--SECTION-SHADOW));
+    }
+
+    pre.code-box {
+        position: relative;
+        top: 0px;
+        margin: 1em 0em;
+        padding-bottom: 2px;
+
+        color: var(--TEXT-CODE);
+        background-color: var(--BG-CODE-BASE);
         border-radius: 5px;
         filter: drop-shadow(0 -4px 0px var(--BG-CODE-SHADOW));
         
@@ -162,11 +157,15 @@ h1 { font-size: 2.25rem; }
     }
     pre.code-box:hover {
         top: 2px;
+        margin-bottom: calc(1em + 2px);
+        padding-bottom: 0px;
+
         /* background-color: var(--BG-CODE-HOVER); */
         filter: drop-shadow(0 -6px 0px var(--BG-CODE-SHADOW));
     }
 }
-.section-base:last-child { padding-bottom: 0.0rem; }
+.section-base:last-child { margin-bottom: 0; }
+.section-base:last-child:last-child { margin-bottom: 0; }
 .section-base:hover {
     top: 2px;
     background-color: var(--SECTION-HOVER);
@@ -193,14 +192,10 @@ header.section-base {
 }
 header.section-base:hover { top: 0px; }
 @media screen and (width < 500px) {
-    header.section-base p { 
-        font-size: 1.2rem;
-    }
+    header.section-base p { font-size: 1.2rem; }
 }
 @media screen and (width < 365px) {
-    header.section-base p { 
-        font-size: 0.9rem;
-    }
+    header.section-base p { font-size: 1.0rem; }
 }
 
 

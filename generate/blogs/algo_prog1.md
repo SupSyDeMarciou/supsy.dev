@@ -1,7 +1,7 @@
 # Formation d'AlgoProg 1
 Ce blog est issu d'une formation que j'ai mise au point pour le cours d'*Algorithmique et Programmation 1* de 1ère année à l'ISMIN (au moment où j'écris ce blog, j'y suis en 3ème année). L'objectif est de transmettre les concepts fondamentaux de la programmation en C (tels que la *synthaxe* du langage ou l'utilisation des *pointeurs*). Le publique ciblé est donc principalement les personnes n'ayant jamais programmé en C, et qui, de manière générale, n'ont que très peu codé dans leur vie (au plus un peu de *Python* pour les cours).
 
-## Sommaire :
+## Sommaire
 1. Qu'est-ce que C ?
 1. Synthaxe et structure du langage
 1. Manipulations de la mémoire en C
