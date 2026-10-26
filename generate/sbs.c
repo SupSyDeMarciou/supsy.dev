@@ -15,13 +15,14 @@ typedef struct file_loc
 
 
 
+#pragma region MARKDOWN
 typedef enum g_text_type
 {
-    TEXT_PLAIN  = 0b0000, // regular written text
-    TEXT_BOLD   = 0b0001, // single stars
-    TEXT_ITALIC = 0b0010, // double stars
-    TEXT_CODE   = 0b0100, // monospace font with background
-    TEXT_NEWL   = 0b1000, // newline
+    TEXT_BOLD   = 0b00000001, // single stars
+    TEXT_ITALIC = 0b00000010, // double stars
+    TEXT_CODE   = 0b00000100, // monospace font with background
+    TEXT_NEWL   = 0b00001000, // newline
+    TEXT_LINK   = 0b00010000, // link to external element or element id
 } g_text_type;
 
 typedef enum g_elem_type
@@ -54,7 +55,7 @@ struct g_text
 {
     file_loc loc;
     g_text_type type;
-    char *str;
+    char *str, *link;
 };
 
 struct g_title
@@ -111,6 +112,7 @@ void print_elem(g_elem *elem, usize indent)
             if (elem->te.type & TEXT_BOLD)   tag = tag ? strf("%s|bold", tag)   : "bold";
             if (elem->te.type & TEXT_ITALIC) tag = tag ? strf("%s|italic", tag) : "italic";
             if (elem->te.type & TEXT_CODE)   tag = tag ? strf("%s|code", tag)   : "code";
+            if (elem->te.type & TEXT_LINK)   tag = tag ? strf("%s|link", tag)   : "link";
             
             if      (elem->te.type == 0)         info(elem->te.loc, "%*s\"%s\"", (int)indent * 4, "", elem->te.str);
             else if (elem->te.type == TEXT_NEWL) info(elem->te.loc, "%*s<br>", (int)indent * 4, "");
@@ -162,8 +164,6 @@ typedef struct md_reader {
     char line[2048];
     int indent;
 
-    array(g_elem) elements;
-
     array(g_list) list_stack;
     bool reuse_line;
 } md_reader;
@@ -186,7 +186,7 @@ char *readline(md_reader *md)
     if (md->line[line_len - 1] == '\n') md->line[line_len - 1] = '\0';
 
     md->indent = cur_indent;
-    info(md->loc, "indent = %d, line = \"%.15s\" {...}", cur_indent, md->line);
+    // info(md->loc, "indent = %d, line = \"%.15s\" {...}", cur_indent, md->line);
     return md->line;
 }
 
@@ -344,7 +344,7 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
         LIST:
             if (md->list_stack.count == 0 || arrayLast(md->list_stack)->indent < cindent)
             {
-                printf("[LIST] Creating new list\n");
+                // printf("[LIST] Creating new list\n");
 
                 file_loc list_loc = md->loc;
                 g_list *list = arrayAdd(md->list_stack, ((g_list) {
@@ -368,7 +368,7 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
                 
                 if (md->list_stack.count && depth < arrayLast(md->list_stack)->indent) 
                 {
-                    printf("[LIST] Propagate \"break\"\n");
+                    // printf("[LIST] Propagate \"break\"\n");
                     file_loc loc = md->loc;
                     loc.c = depth;
                     arrayAdd(*elements, g_elem_(ELEM_BREAK, loc));
@@ -377,7 +377,7 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
                 return true;
             }
 
-            printf("[LIST] Adding new item\n");
+            // printf("[LIST] Adding new item\n");
             
             arrayAdd(*elements, g_elem_(ELEM_LIST_ITEM, md->loc, .li.is_ordered = ordered_label_length > 0));
             
@@ -431,7 +431,47 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
                 g_text t = parse_md_text(md, &t_type);
                 if (t.type == TEXT_NEWL) arrayAdd(paragraph.pa.text, t);
                 if (t.str == NULL) continue;
-                arrayAdd(paragraph.pa.text, t);
+
+
+                const char *at = strstr(t.str, "](");
+                if ((t.type & TEXT_CODE) == 0 && at) // Most likely a link
+                {
+                    const char *start = NULL, *end = NULL;
+                    for (int i = 0; !start || !end || at[i] || at - i >= t.str; ++i)
+                    {
+                        if (!start && at - i >= t.str && at[-i] == '[') start = at - i;
+                        if (!end && at[i] && at[i] == ')') end = at + i;
+                    }
+                    if (start && end) // Definitly a link
+                    {
+                        char *base = t.str;
+                        char *label = strndup(start + 1, at - start - 1);
+                        char *link  = strndup(at    + 2, end - at - 2);
+
+                        if (start > base)
+                        {
+                            t.str  = strndup(base, start - base);
+                            t.link = NULL;
+                            arrayAdd(paragraph.pa.text, t);
+                        }
+                        
+                        t.str   = label;
+                        t.link  = link;
+                        t.type |= TEXT_LINK;
+                        arrayAdd(paragraph.pa.text, t);
+                        
+                        if (end[1])
+                        {
+                            t.str   = strdup(end + 1);
+                            t.link  = NULL;
+                            t.type &= ~TEXT_LINK;
+                            arrayAdd(paragraph.pa.text, t);
+                        }
+                        
+                        free(base);
+                    }
+                }
+                else arrayAdd(paragraph.pa.text, t);
             }
 
             if (concat) arrayLast(*elements)->pa = paragraph.pa;
@@ -442,24 +482,51 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
     return true;
 }
 
-array(g_elem) parse_md(const char *source_path)
+typedef struct md_tree
+{
+    array(g_elem) elements;
+    bool is_french;
+    const char *title;
+    const char *description;
+} md_tree;
+
+md_tree parse_md(const char *source_path)
 {
     FILE *f = fopen(source_path, "r");
     if (!f) SL_terminate(-1, "Failed to open \"%s\"!", source_path);
 
+    md_tree ret = {0};
     md_reader md = { .f = f, .loc = { .source_path = source_path } };
 
+    if (readline(&md))
+    {
+        if      (strcmp(md.line, "[FR]") == 0) ret.is_french = true;
+        else if (strcmp(md.line, "[EN]") == 0) ret.is_french = false;
+        else                                          md.reuse_line = true;
+    }
     while (
         readline(&md) &&
-        parse_md_elem(&md, &md.elements, md.indent, -1, 0)
+        parse_md_elem(&md, &ret.elements, md.indent, -1, 0)
     );
+    fclose(f);
 
-    fclose(f);    
-    return md.elements;
+    array(char) tmp = {0};
+    assert(ret.elements.data[0].type == ELEM_TITLE && "FIRST MUST BE A TITLE");
+    aforeach(t, ret.elements.data[0].ti.text) arrayAdd_range(tmp, strlen(t->str), t->str);
+    ret.title = strndup(tmp.data, tmp.count);
+    
+    tmp.count = 0;
+    assert(ret.elements.data[1].type == ELEM_PARAGRAPH && "SECOND MUST BE A PARAGRAPH");
+    aforeach(t, ret.elements.data[1].pa.text) arrayAdd_range(tmp, strlen(t->str), t->str);
+    ret.description = strndup(tmp.data, tmp.count);
+    
+    return ret;
 }
+#pragma endregion MARKDOWN
 
 
 
+#pragma region GENERATE
 bool generate_html_text(FILE *f, g_text text)
 {
     if (text.type == TEXT_NEWL) 
@@ -471,12 +538,14 @@ bool generate_html_text(FILE *f, g_text text)
     if (text.type & TEXT_BOLD)   fputs("<b>", f);
     if (text.type & TEXT_ITALIC) fputs("<i>", f);
     if (text.type & TEXT_CODE)   fputs("<code class=\"inline\">", f);
+    if (text.type & TEXT_LINK)   fprintf(f, "<a class=\"text-accent underline\" href=\"%s\">", text.link);
     for (char *p = text.str; *p; ++p)
     {
         if      (*p == '&') fputs("&amp", f);
         else if (*p == '<') fputs("&lt", f);
         else                fputc(*p, f);
     }
+    if (text.type & TEXT_LINK)   fputs("</a>", f);
     if (text.type & TEXT_CODE)   fputs("</code>", f);
     if (text.type & TEXT_ITALIC) fputs("</i>", f);
     if (text.type & TEXT_BOLD)   fputs("</b>", f);
@@ -532,7 +601,7 @@ void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first, bool dire
                 if (elem.ti.text.data[0].str[id - 1] == '.') --id;
 
                 fprintf(f, 
-                    "%*s<h%zu id=\"%.*s\">", (int)depth * 4, "", 
+                    "%*s<h%zu><span id=\"%.*s\"></span>", (int)depth * 4, "", 
                     elem.ti.depth, (int)id, elem.ti.text.data[0].str
                 );
             }
@@ -579,7 +648,99 @@ void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first, bool dire
     }
 }
 
-void generate_html(const char *output_path, array(g_elem) elements)
+
+
+typedef union list_entry {
+    struct {
+        const char *src;
+        const char *date;
+        const char *lang;
+        const char *title;
+        const char *desc;
+    };
+    const char *data[5];
+} list_entry;
+DEF_ARRAY(list_entry);
+DEF_CMP_FUNC(list_entry, lhs, rhs) { 
+    int res;
+    if (res = strncmp(lhs->date + 7, rhs->date + 7, 4)) return res;
+    if (res = strncmp(lhs->date + 3, rhs->date + 3, 2)) return res;
+    if (res = strncmp(lhs->date + 0, rhs->date + 0, 2)) return res;
+    return 0;
+}
+
+list_entry list_entry_(const char *src, time_t tim, bool is_french, const char *title, const char *desc)
+{
+    struct tm tm = *localtime(&tim);
+    char *date = strf("%02d/%02d/%04d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
+
+    return (list_entry) {
+        .src = src, .date = date, .lang = is_french ? "fr" : "en",
+        .title = title, .desc = desc
+    };
+}
+
+array(list_entry) load_list(const char *path)
+{
+    array(list_entry) ret = {0};
+
+    FILE *f = fopen(path, "r");
+    if (!f) SL_terminate(-1, "Failed to open \"%s\"!", path);
+    
+    char line[2048];
+    list_entry entry = {0};
+    usize data = 0;
+    while (fgets(line, sizeof(line), f))
+    {
+        entry.data[data++] = strndup(line, strlen(line) - 1);
+        if (data == 5) {
+            data = 0;
+            arrayAdd(ret, entry);
+            if (!fgets(line, sizeof(line), f)) break;
+        }
+    }
+
+    fclose(f);
+    return ret;
+}
+void save_list(array(list_entry) le, const char *path)
+{
+    FILE *f = fopen(path, "w");
+    if (!f) SL_terminate(-1, "Failed to open \"%s\"!", path);
+
+    arraySort(le, list_entry_cmp_inv);
+    aforeach(e, le)
+    {
+        fputs(e->src,   f); fputc('\n', f);
+        fputs(e->date,  f); fputc('\n', f);
+        fputs(e->lang,  f); fputc('\n', f);
+        fputs(e->title, f); fputc('\n', f);
+        fputs(e->desc,  f); fputc('\n', f);
+        if (e + 1 < __e_MAX__) fputc('\n', f);
+    }
+
+    fclose(f);
+}
+void update_list(const char *path, list_entry new_entry)
+{
+    array(list_entry) entries = load_list(path);
+    aforeach(e, entries)
+    {
+        if (strcmp(e->src, new_entry.src) == 0)
+        {
+            arrayRemove(entries, aindex(e));
+            break;
+        }
+    }
+    arrayAdd(entries, new_entry);
+    save_list(entries, path);
+}
+
+
+
+
+
+void generate_blog(const char *output_path, md_tree md)
 {
     // FILE *f = stdout;
     FILE *f = fopen(output_path, "w");
@@ -587,14 +748,14 @@ void generate_html(const char *output_path, array(g_elem) elements)
     
     fprintf(f, 
         "<!DOCTYPE html>\n"
-        "<html lang=\"en\">\n"
+        "<html lang=\"%s\">\n"
         "<head>\n"
         "    <meta charset=\"UTF-8\">\n"
         "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
         "    <link rel=\"stylesheet\" href=\"../style.css\" type=\"text/css\"/>\n"
         "    <link rel=\"stylesheet\" href=\"../external/prism.css\"/>"
         "    <!-- <link rel=\"icon\" href=\"icons/supsy.png\"> -->\n"
-        "    <title>supsy.dev</title>\n"
+        "    <title>supsy.dev - Blog - %s</title>\n"
         "    <!-- <FONT> -->\n"
         "        <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n"
         "        <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n"
@@ -611,9 +772,10 @@ void generate_html(const char *output_path, array(g_elem) elements)
         "            <p><a href=\"../projects.html\">Projects</a></p>\n"
         "        </header>\n"
         "        <section class=\"section-base blog\">\n"
-
+        ,
+        md.is_french ? "fr" : "en", md.title
     );
-    aforeach(el, elements) generate_html_elem(f, 3, *el, aindex(el) == 0, true);
+    aforeach(el, md.elements) generate_html_elem(f, 3, *el, aindex(el) == 0, true);
     fprintf(f,
         "        </section>\n"
         "        <footer><div></div><p>Vlad MUNTEANU 2026 - All rights reserved.</p></footer>\n"
@@ -625,6 +787,7 @@ void generate_html(const char *output_path, array(g_elem) elements)
 
     fclose(f);
 }
+#pragma endregion GENERATE
 
 #define ROOT "/home/supsy/Coding/SupSy/supsy.dev/"
 
@@ -632,13 +795,25 @@ int main(int argc, char **argv)
 {
     SBS_rebuild(argc, argv, "-I../../SupSyLibraries/include/");
 
-    const char *blog_name = argc > 1 ? argv[1] : NULL;
-    if (!blog_name) SL_terminate(-1, "Expected blog name!");
-
-    array(g_elem) elements = parse_md(tmpf(ROOT"generate/blogs/%s.md", blog_name));
-    // printf("\n------\n\n");
-    // aforeach(e, elements) print_elem(e, 0);
-    generate_html(tmpf(ROOT"blogs/%s.html", blog_name), elements);
+    if (argc > 1 && strcmp(argv[1], "blog") == 0)
+    {
+        const char *blog_name = argc > 2 ? argv[2] : NULL;
+        if (!blog_name) SL_terminate(-1, "Expected blog name!");
+    
+        md_tree md = parse_md(strf(ROOT"generate/blogs/%s.md", blog_name));
+        printf("\n------\n\n");
+        // aforeach(e, md.elements) print_elem(e, 0);
+        // printf("\n------\n\n");
+        generate_blog(strf(ROOT"blogs/%s.html", blog_name), md);
+        SBS_logI("is_french=%d, title=\"%s\"", md.is_french, md.title);
+        
+        printf("\n------\n\n");
+        update_list(ROOT"blog.list", list_entry_(blog_name, time(NULL), md.is_french, md.title, md.description));
+    }
+    else 
+    {
+        SL_terminate(-1, "Expected generation command (\"blog\" or \"project\")!");
+    }
 
     return 0;
 }

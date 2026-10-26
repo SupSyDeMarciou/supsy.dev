@@ -34,21 +34,21 @@
         </section>
         <section class="section-base blog">
             <h1><a href="blog.html">/blog</a><span class="text-accent">/latest</span></h1>
-            <ul>
-                <li><a href="blogs/algo_prog1.html">[25/10/26 - FR] <b>Formation d'AlgoProg1 :</b>formation pour un cours d'introduction au C</a></li>
-            </ul>
+            <ul class="spaced" id="blog-list"></ul>
         </section>
         <section class="section-base projects">
             <h1><a href="projects.html">/projects</a><span class="text-accent">/latest</span></h1>
-            <ul>
-                <li><a href="404">SupSyLibraries (SL): useful libraries for helping with linear algebra, generic structures and others.</a></li>
-                <li><a href="404">SupSyGameEngine (SGE): </a></li>
-                <li><a href="404">EasyWin32 (EW32): basic interface with the Windows api for creating a window, querying inputs and rendering (CPU-side).</a></li>
-            </ul>
+            <ul class="spaced" id="project-list"></ul>
         </section>
         <footer>
+            <div></div> <!-- Empty div for spacing, I don't really know why this works lol  -->
             <p>Vlad MUNTEANU 2026 - All rights reserved.</p>
         </footer>
+        <script src="load_list.js"></script>
+        <script>
+            insertListEntries("blog.list",    document.getElementById("blog-list"),    3, "blog.html");
+            insertListEntries("project.list", document.getElementById("project-list"), 3, "projects.html");
+        </script>
     </main>
 </body>
 </html>

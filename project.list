@@ -1,0 +1,23 @@
+sl
+26/10/2026
+en
+SupSyLibraries (SL)
+Useful libraries for helping with linear algebra, generic structures and others.
+
+sge
+26/10/2026
+en
+SupSyGameEngine (SGE)
+Graphics rendering, physics and scene management. All the necessary to start a game!
+
+sbs
+26/10/2026
+en
+SupSyBuildSystem (SBS)
+Building C code using C code. Inspired by Tsoding's "nod.h", but developped separetly.
+
+ew32
+26/10/2026
+en
+EasyWin32 (EW32)
+Basic interface with the Windows api for creating a window, querying inputs and rendering (CPU-side).

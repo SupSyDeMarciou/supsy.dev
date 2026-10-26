@@ -11,8 +11,8 @@
     --SECTION-BASE:   #333333;
     --SECTION-HOVER:  #383838;
     --SECTION-SHADOW: #282828;
-    --INFO-BASE:       #3F3F3F;
-    --INFO-HOVER:      #454545;
+    --INFO-BASE:      #3F3F3F;
+    --INFO-HOVER:     #454545;
 }
 
 * {
@@ -51,7 +51,10 @@ main {
     width: var(--CONTENT-WIDTH);
     color: var(--TEXT-BASE);
 }
-a  { color: var(--TEXT-BASE); }
+a  {
+    text-decoration-line: none;
+    color: var(--TEXT-BASE);
+}
 
 h1 { font-size: 2.25rem; }
 h2 { font-size: 1.5rem; }
@@ -72,8 +75,11 @@ p  { font-size: 1.0rem; }
 
 
 
-.text-base    { color: var(--TEXT-BASE);   }
-.text-accent  { color: var(--TEXT-ACCENT); }
+.text-base   { color: var(--TEXT-BASE); }
+.text-accent { color: var(--TEXT-ACCENT); }
+.text-dim    { color: var(--TEXT-DIM); }
+.underline   { text-decoration-line: underline; }
+
 .section-base {
     display: flex;
     flex-direction: column;
@@ -87,7 +93,6 @@ p  { font-size: 1.0rem; }
     filter: drop-shadow(0 8px 0px var(--SECTION-SHADOW));
 
     p, a, h1, h2, h3, h4, h5, h6 {
-        text-decoration-line: none;
         text-decoration-thickness: 1.5px;
         text-underline-offset: 2.5px;
     }
@@ -97,9 +102,21 @@ p  { font-size: 1.0rem; }
         text-decoration-color: var(--TEXT-HOVER);
     }
     
+    h1, h2, h3, h4, h5, h6 { 
+        position: relative;
+        span { position: absolute; top: -4.75rem; }
+    }
+    h1 span { top: -6rem; }
+
     h1, h2, h3 { padding-bottom: 1.0rem; }
     p          { padding-bottom: 0.6rem; }
     ul, ol     { padding-left:   2.0em;  }
+    
+    ul.spaced, ol.spaced {
+        li:not(:last-child) {
+            padding-bottom: 1.0em;
+        }
+    }
 
     .chapter {
         color: var(--TEXT-DIM);
@@ -183,7 +200,7 @@ header.section-base {
     z-index: 1;
     border-radius: 0 0 15px 15px;
 
-    p { 
+    p {
         margin-right: 0.55em;
         padding: 0px;
         font-size: 1.5rem;
