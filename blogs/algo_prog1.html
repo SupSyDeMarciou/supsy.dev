@@ -22,7 +22,7 @@
             <p><a href="../projects.html">Projects</a></p>
         </header>
         <section class="section-base blog">
-            <h1><span id="Formation"></span>Formation d'AlgoProg 1 <a class="chapter" href="#Formation">#</a></h1>
+            <h1><span class="anchor" id="Formation"></span>Formation d'AlgoProg 1 <a class="chapter" href="#Formation">#</a></h1>
             <p>
                 Ce blog est issu d'une formation que j'ai mise au point pour le cours d'<i>Algorithmique et Programmation 1</i> de 1ère année à l'ISMIN (au moment où j'écris ce blog, j'y suis en 3ème année).
             </p>
@@ -32,7 +32,7 @@
             <p>
                 Un <i><a class="text-accent underline" href="https://github.com/SupSyDeMarciou/formation_algoprog1">répo GitHub</a></i> complémentaire est fourni avec des exemples d'implémentation commentés et deux corrections d'annales des années passées.
             </p>
-            <h2><span id="Sommaire"></span>Sommaire <a class="chapter" href="#Sommaire">#</a></h2>
+            <h2><span class="anchor" id="Sommaire"></span>Sommaire <a class="chapter" href="#Sommaire">#</a></h2>
             <ol>
                 <li>
                     <p>
@@ -72,7 +72,7 @@
             </ol>
         </section>
         <section class="section-base blog">
-            <h1><span id="1"></span>1. Qu'est-ce que C ? <a class="chapter" href="#1">#</a></h1>
+            <h1><span class="anchor" id="1"></span>1. Qu'est-ce que C ? <a class="chapter" href="#1">#</a></h1>
             <p>
                 Le <b>C</b> est un langage de programmation:
             </p>
@@ -125,8 +125,8 @@
             </ul>
         </section>
         <section class="section-base blog">
-            <h1><span id="2"></span>2. Synthaxe et structure du langage <a class="chapter" href="#2">#</a></h1>
-            <h2><span id="2.1"></span>2.1 Premier programme <a class="chapter" href="#2.1">#</a></h2>
+            <h1><span class="anchor" id="2"></span>2. Synthaxe et structure du langage <a class="chapter" href="#2">#</a></h1>
+            <h2><span class="anchor" id="2.1"></span>2.1 Premier programme <a class="chapter" href="#2.1">#</a></h2>
             <p>
                 Voici un exemple basique d'un programme en C pour illustrer sa synthaxe :
             </p>
@@ -179,7 +179,7 @@ int main()
             <hgroup>
                 <h3>/!\ LA FONCTION MAIN DOIT OBLIGATOIREMENT APPARAÎTRE DANS LE CODE CAR C'EST LA PREMIÈRE FONCTION QUI SERA APPELÉE LORS DU LANCEMENT DU PROGRAMME /!\</h3>
             </hgroup>
-            <h2><span id="2.2"></span>2.2 Les différents énoncés de flow de contrôle <a class="chapter" href="#2.2">#</a></h2>
+            <h2><span class="anchor" id="2.2"></span>2.2 Les différents énoncés de flow de contrôle <a class="chapter" href="#2.2">#</a></h2>
             <p>
                 Un <i>énoncé de flow de contrôle</i> (j'ai pas trouvé de meilleur nom) permet de modifier la trame d'exécution du code (qui est par défaut parfaitement séquencielle et uni-directionnelle). Souvent, une condition entre en jeu pour décider ou non du branchement du code.<br>
                 Voici une liste de ceux qui vous seront utiles :
@@ -234,7 +234,7 @@ break;</code></pre>
                     <b>(i)</b> La synthaxe de la boucle <code class="inline">for</code> n'impose pas de compter jusqu'à <code class="inline">N</code> avec un entier qui incrémente à chaque itération, on peut faire bien plus (<b><i>cf. </i></b><b><i><a class="text-accent underline" href="#6.1">6.1</a></i></b> pour un exemple de parcours de liste chaînée utilisant une boucle <code class="inline">for</code>). 
                 </p>
             </hgroup>
-            <h2><span id="2.3"></span>2.3 Utiliser une variable <a class="chapter" href="#2.3">#</a></h2>
+            <h2><span class="anchor" id="2.3"></span>2.3 Utiliser une variable <a class="chapter" href="#2.3">#</a></h2>
             <p>
                 Comme évoqué précédement, le C est un langage fortement typé ce qui impose donc aux variables d'avoir un type explicitement défini :
             </p>
@@ -276,11 +276,11 @@ if (variable_inside_scope == 42) // [ERROR] Undeclared identifier "variable_insi
             <hgroup>
                 <h3>/!\ ATTENTION ! CECI EST TRÈS DIFFÉRENT DU PYTHON ! IL VA FALLOIR SE FAMILIARISER AVEC CE "FORT TYPAGE" ET CETTE "LOCALITÉ" DES VARIABLES /!\</h3>
             </hgroup>
-            <h2><span id="2.4"></span>2.4 Les types <a class="chapter" href="#2.4">#</a></h2>
+            <h2><span class="anchor" id="2.4"></span>2.4 Les types <a class="chapter" href="#2.4">#</a></h2>
             <p>
                 Le C possède un certain nombre de types "basiques" et permet aussi de créer des types dits "composites" ou "structurés". Ceux-ci sont utilisés pour expliciter la représentation en mémoire des variables dans le code (par exemple, pour donner la taille en octets qu'occupe la variable).
             </p>
-            <h3><span id="2.4.1"></span>2.4.1 Les types de base <a class="chapter" href="#2.4.1">#</a></h3>
+            <h3><span class="anchor" id="2.4.1"></span>2.4.1 Les types de base <a class="chapter" href="#2.4.1">#</a></h3>
             <p>
                 Le C propose plusieurs types fondamentaux :
             </p>
@@ -327,7 +327,7 @@ if (variable_inside_scope == 42) // [ERROR] Undeclared identifier "variable_insi
             <hgroup>
                 <h3>/!\ ATTENTION ! LE TYPE <code class="inline">bool</code> N'EST PAS DÉFINIT PAR DÉFAUT ET DOIT ÊTRE INCLU AVEC <code class="inline">#include &ltstdbool.h></code>. CECI EST AUSSI VRAI POUR LES CONSTANTES <code class="inline">true</code> (1) et <code class="inline">false</code> (0) /!\</h3>
             </hgroup>
-            <h3><span id="2.4.2"></span>2.4.2 Les types structurés (<i>struct</i>) <a class="chapter" href="#2.4.2">#</a></h3>
+            <h3><span class="anchor" id="2.4.2"></span>2.4.2 Les types structurés (<i>struct</i>) <a class="chapter" href="#2.4.2">#</a></h3>
             <p>
                 Pour pouvoir représenter des données plus complexes que de simples nombres, on peut être amenés à devoir utiliser des données structurées, ou <i>struct</i> :
             </p>
@@ -372,7 +372,7 @@ float value_y = variable.y;</code></pre>
             <p>
                 Il est à noter que dans l'exemple ci-dessus, le nom initial du type structuré est bien <code class="inline">struct MyStruct</code> et pas seulement <code class="inline">MyStruct</code> car dans ce contexte <code class="inline">MyStruct</code> n'est que le nom de la représentation structurelle et non du type qui en découle. Cette nuance peut porter à confusion, c'est pourquoi je vous recommande d'utiliser les <code class="inline">typedef</code> pour s'assurer de bien faire référence au type défini.
             </p>
-            <h2><span id="2.5"></span>2.5 Les fonctions <a class="chapter" href="#2.5">#</a></h2>
+            <h2><span class="anchor" id="2.5"></span>2.5 Les fonctions <a class="chapter" href="#2.5">#</a></h2>
             <p>
                 Comme pour les variables, les fonctions en C sont typées. En particulier, les paramètres d'entrée de la fonction doivent avoir un type explicite et la valeur de retour (si la fonction renvoie quelque-chose) doit aussi être explicitée :
             </p>
@@ -424,7 +424,7 @@ int a = puissance2(2); // a = 4</code></pre>
                     </p>
                 </li>
             </ul>
-            <h2><span id="2.6"></span>2.6 Les directives de préprocesseur <i>(qui commencent par </i><i><code class="inline">#</code></i><i>)</i> <a class="chapter" href="#2.6">#</a></h2>
+            <h2><span class="anchor" id="2.6"></span>2.6 Les directives de préprocesseur <i>(qui commencent par </i><i><code class="inline">#</code></i><i>)</i> <a class="chapter" href="#2.6">#</a></h2>
             <p>
                 Les directives de préprocesseur sont des instructions qui seront exécutées avant que le programme soit compilé : elles modifient directement le code source.<br>
                 Les deux plus importantes sont :
@@ -447,8 +447,8 @@ int a = puissance2(2); // a = 4</code></pre>
             </ul>
         </section>
         <section class="section-base blog">
-            <h1><span id="3"></span>3. Manipulations de la mémoire en C <a class="chapter" href="#3">#</a></h1>
-            <h2><span id="3.1"></span>3.1 Démystification des <i>pointeurs</i> <a class="chapter" href="#3.1">#</a></h2>
+            <h1><span class="anchor" id="3"></span>3. Manipulations de la mémoire en C <a class="chapter" href="#3">#</a></h1>
+            <h2><span class="anchor" id="3.1"></span>3.1 Démystification des <i>pointeurs</i> <a class="chapter" href="#3.1">#</a></h2>
             <p>
                 Lorsqu'un programme s'exécute, il a très souvent besoin de modifier des variables et de conserver des valeurs pour les réutiliser plus tard : il a besoin d'une <i>mémoire</i>.<br>
                 Cette mémoire doit être imaginée comme une succession de cases pouvant chacune contenir 1 octet (ou 8 bits) arrangées en ligne. On peut alors identifier une case par sa position dans la ligne, ce qu'on appelle en informatique son <i>adresse</i> (comme une adresse de maison si la ligne était une route). Une adresse est donc un entier allant de 0 (la première boîte, qui est au tout début de la ligne et donc décalée de 0 par rapport au début de celle-ci) à N, la mémoire allouée au programme qui s'exécute. Cette adresse va être très importante en C car elle va permettre aux programmes de pouvoir lire et modifier des données à des endroits précis de la mémoire de façon <i>absolue</i>. Cette adresse peut alors être stockée dans une variable, que l'on appelera un <i>pointeur</i> (car elle indique la position d'un élément en mémoire, pas parce qu'elle touche des gosses) :
@@ -523,8 +523,8 @@ int valeur_dans_a = (*ts).a;
 //                   |   Lecture classique dans la structure
 //                   Dérécférencement du pointeur `ts` pour travailler directement avec la structure
 //                   pointée.</code></pre>
-            <h2><span id="3.2"></span>3.2 Division de la mémoire : la pile et le tas, et quand utiliser <code class="inline">malloc</code> et <code class="inline">free</code> <a class="chapter" href="#3.2">#</a></h2>
-            <h3><span id="3.2.1"></span>3.2.1 La pile <a class="chapter" href="#3.2.1">#</a></h3>
+            <h2><span class="anchor" id="3.2"></span>3.2 Division de la mémoire : la pile et le tas, et quand utiliser <code class="inline">malloc</code> et <code class="inline">free</code> <a class="chapter" href="#3.2">#</a></h2>
+            <h3><span class="anchor" id="3.2.1"></span>3.2.1 La pile <a class="chapter" href="#3.2.1">#</a></h3>
             <p>
                 Lorsqu'une fonction est appelée, elle a besoin de réserver de la mémoire pour y stocker ses variables internes et deux-trois autres bricoles. En effet, nous avons vu avant que les variables sont <i>locales</i> à une scope synthaxiquement, mais il est aussi vrai qu'elles sont <i>locales</i> à une fonction, que ce soit synthaxiquement mais aussi en termes de mémoire. De ce fait, lorsqu'une fonction fini de s'exécuter et qu'elle n'a donc plus besoin de la mémoire qu'elle avait réservée, elle va la libérer ce qui, en conséquence, va détruire les variables internes à la fonction : les variables en C sont <i>éphémères</i> et n'exitent qu'à l'échelle d'une fonction.
             </p>
@@ -539,7 +539,7 @@ int valeur_dans_a = (*ts).a;
                     <b>(i)</b> Un <i>stack overflow</i> arrive souvent lors d'appels récursifs si la condition d'arrêt n'est jamais atteinte.
                 </p>
             </hgroup>
-            <h3><span id="3.2.2"></span>3.2.2 Le tas <a class="chapter" href="#3.2.2">#</a></h3>
+            <h3><span class="anchor" id="3.2.2"></span>3.2.2 Le tas <a class="chapter" href="#3.2.2">#</a></h3>
             <p>
                 La pile nous permet déjà d'accomplir tout un tas de fonctionnalités et sera suffisante dans la majorité des cas, mais il arrive parfois qu'un programme ait besoin de réserver une zone de mémoire qui perdure après la fin de l'appel d'une fonction. Dans ce cas, il réserve une zone mémoire dans le <b><i>tas</i></b> (<i>heap</i> en anglais), une zone de la mémoire qui n'est associée à aucune fonction et qui n'est donc pas éphémère. Grâce à cette mémoire plus durable, on va être capable de manipuler des données dont la taille n'est pas forcément connue à la compilation (exemple : un tableau d'entiers dont la taille dépend d'un calcul) ou qui ne doivent pas être limitées au contexte d'une fonction (exemple : listes chaînées, <b><i>cf. </i></b><b><i><a class="text-accent underline" href="#6.1">6.1</a></i></b>).<br>
                 
@@ -586,7 +586,7 @@ int main()
 }</code></pre>
         </section>
         <section class="section-base blog">
-            <h1><span id="4"></span>4. Chaînes de charactères <a class="chapter" href="#4">#</a></h1>
+            <h1><span class="anchor" id="4"></span>4. Chaînes de charactères <a class="chapter" href="#4">#</a></h1>
             <p>
                 En C, les chaînes de charactères (ou <i>string</i> en anglais) sont des tableaux de charactères (<code class="inline">char</code>) se finissant pas un charactère nul <code class="inline">'\0'</code> (en anglais, elles sont décrites comme <i>null-terminated</i>). Lorsqu'on déclare une chaîne de charactère à l'aide de guillements, le compilateur ajoute automatiquement ce charactère nul à la fin de la chaîne :
             </p>
@@ -642,14 +642,14 @@ int strlen(char *string)
             </hgroup>
         </section>
         <section class="section-base blog">
-            <h1><span id="5"></span>5. Manipulation de flux (fichiers et entrées/sorties du terminal) <a class="chapter" href="#5">#</a></h1>
+            <h1><span class="anchor" id="5"></span>5. Manipulation de flux (fichiers et entrées/sorties du terminal) <a class="chapter" href="#5">#</a></h1>
             <p>
                 Il arrive parfois qu'on ait besoin de manipuler une donnée externe au programme, comme un fichier, le terminal ou d'autres joyeusetés qu'on ne va pas aborder. Alors, on peut définir un <b><i>flux</i></b> comme une interface abstraite pour lire/écrire des données depuis la structure soujacente, que ce soit un fichier ou le terminal.
             </p>
             <p>
                 En C, la manipulation de flux se fait principalement à l'aide de la librairie standard <code class="inline">&ltstdio.h></code> qui définit le type <code class="inline">FILE *</code> (notre flux) ainsi qu'une multitudes de fonctions agissant sur ce type.
             </p>
-            <h2><span id="5.1"></span>5.1 Lecture et écriture dans un flux <a class="chapter" href="#5.1">#</a></h2>
+            <h2><span class="anchor" id="5.1"></span>5.1 Lecture et écriture dans un flux <a class="chapter" href="#5.1">#</a></h2>
             <p>
                 Les fonctions de manipulation de flux sont toutes préfixées par <code class="inline">f</code> pour <i>File</i>. <br>
                 On retrouve pour l'écriture :
@@ -707,7 +707,7 @@ int strlen(char *string)
                     <b>(i)</b> Les entrées et sorties du terminal sont elles-aussi des flux, et sont nommés <code class="inline">stdin</code> <i>(STanDard INput, entrée textuelle de l'utilisateur)</i> et <code class="inline">stdout</code> <i>(STanDard OUtput, texte affichée sur le terminal)</i>, on pourrait donc utiliser les fonctions préfixés par <code class="inline">f</code>. Cependant, la librairie standard propose aussi des fonctions d'écritures de fichiers qui sont spécifiquement dirigées vers le terminal (celles-ci n'ont alors pas le préfixe <code class="inline">f</code> et sont donc les fameux <code class="inline">printf</code> et <code class="inline">scanf</code>).
                 </p>
             </hgroup>
-            <h2><span id="5.2"></span>5.2 Manipulation d'un fichier <a class="chapter" href="#5.2">#</a></h2>
+            <h2><span class="anchor" id="5.2"></span>5.2 Manipulation d'un fichier <a class="chapter" href="#5.2">#</a></h2>
             <p>
                 Pour ouvrir un flux vers un fichier, on va utiliser la fonction <code class="inline">fopen</code> <i>(File OPEN)</i>. Celle-ci attend un chemin vers le fichier ainsi qu'un <i>mode d'ouverture</i> :
             </p>
@@ -752,8 +752,8 @@ int main()
     
     return 0;
 }</code></pre>
-            <h2><span id="5.3"></span>5.3 Texte formaté: <code class="inline">printf</code> et <code class="inline">scanf</code> <a class="chapter" href="#5.3">#</a></h2>
-            <h3><span id="5.3.1"></span>5.3.1 Impression de texte formaté avec <code class="inline">printf</code> <a class="chapter" href="#5.3.1">#</a></h3>
+            <h2><span class="anchor" id="5.3"></span>5.3 Texte formaté: <code class="inline">printf</code> et <code class="inline">scanf</code> <a class="chapter" href="#5.3">#</a></h2>
+            <h3><span class="anchor" id="5.3.1"></span>5.3.1 Impression de texte formaté avec <code class="inline">printf</code> <a class="chapter" href="#5.3.1">#</a></h3>
             <p>
                 Lorsqu'on veut insérer un entier, un réel, un charactère ou une chaîne de charactère dans un flux ou une chaîne de charactères, on fait appel à la fonction <code class="inline">printf</code> <i>(PRINT Formated)</i> (ou <code class="inline">fprintf</code> pour les flux et <code class="inline">sprintf</code> pour les chaînes de charactères, les trois ayant la même synthaxe). La synthaxe est la suivante :
             </p>
@@ -784,7 +784,7 @@ printf("string: %8s\n", "moins");           // Expect: "string:    moins\n"</cod
             <p>
                 Bien évidement, il existe bien plus de balises et de modificateurs. 
             </p>
-            <h3><span id="5.3.2"></span>5.3.2 Extraction d'expressions avec <code class="inline">scanf</code> <a class="chapter" href="#5.3.2">#</a></h3>
+            <h3><span class="anchor" id="5.3.2"></span>5.3.2 Extraction d'expressions avec <code class="inline">scanf</code> <a class="chapter" href="#5.3.2">#</a></h3>
             <p>
                 Lorsqu'on veut extraire des entiers, des réels, des charactères ou des chaînes de charactères depuis un flux ou une chaîne de charactères, on peut utiliser les fonctions de la famille <code class="inline">scanf</code> <i>(SCAN Formated)</i> (avec <code class="inline">fscanf</code> pour les flux et <code class="inline">sscanf</code> pour les chaînes de charactères). La synthaxe est identique à celle de <code class="inline">printf</code> mais, comme on veut lire des valeurs, on passe en argument des pointeurs vers des variables où stocker les données extraites :
             </p>
@@ -797,8 +797,8 @@ scanf("int: %d, float: %f, char: %c, str: %.24s", &ampa, &ampf, &ampc, str);
 // On s'attend à avoir a = 2, f = 12.67, c = `c`, str = "chaine de 24 charactères"</code></pre>
         </section>
         <section class="section-base blog">
-            <h1><span id="6"></span>6. Structures de base <a class="chapter" href="#6">#</a></h1>
-            <h2><span id="6.1"></span>6.1 Liste chaînée <a class="chapter" href="#6.1">#</a></h2>
+            <h1><span class="anchor" id="6"></span>6. Structures de base <a class="chapter" href="#6">#</a></h1>
+            <h2><span class="anchor" id="6.1"></span>6.1 Liste chaînée <a class="chapter" href="#6.1">#</a></h2>
             <p>
                 La liste chaînée est un ensemble de <i>maillons</i> qui pointent vers leurs successeurs. Ainsi, une liste chaînée se différencie d'un tableau par sa non-linéarité (chaque élément de la liste n'est pas focément à côté en mémoire) et par l'individualité de ses éléments (un noeud peut être alloué ou libéré de façon individuelle).
             </p>
@@ -873,7 +873,7 @@ int main()
                     <b>(i)</b> Une implémentation très complète et commentée de liste chaînée se trouve à <code class="inline">impl/list.h</code> et <code class="inline">impl/list.c</code>.
                 </p>
             </hgroup>
-            <h2><span id="6.2"></span>6.2 Piles et file (structures de données, pas zones mémoires, je sais c'est chiant) <a class="chapter" href="#6.2">#</a></h2>
+            <h2><span class="anchor" id="6.2"></span>6.2 Piles et file (structures de données, pas zones mémoires, je sais c'est chiant) <a class="chapter" href="#6.2">#</a></h2>
             <p>
                 En termes de structures de données, une <i>pile</i> et une <i>file</i> sont quasiment identiques et se charactérisent par quatres fonctions :
             </p>
@@ -912,7 +912,7 @@ int main()
             <p>
                 On peut donc implémenter ces structures aussi bien avec des listes chaînées qu'avec des <i>tableaux dynamiques</i> (dans le sens <i>redimensionnables</i>).
             </p>
-            <h2><span id="6.3"></span>6.3 Tas binaire <a class="chapter" href="#6.3">#</a></h2>
+            <h2><span class="anchor" id="6.3"></span>6.3 Tas binaire <a class="chapter" href="#6.3">#</a></h2>
             <p>
                 Un <i>tas binaire</i> est une structure de données qui, en conservant ses éléments dans un certain ordre, vise à minimiser le temps nécessaire pour trouver une valeur précise. On associe chacun des éléments à un <i>noeud</i> dans un <i>arbre</i> et on impose que :
             </p>
@@ -1006,8 +1006,8 @@ de gauche à droite) passerait par :
     '---------------'</code></pre>
         </section>
         <section class="section-base blog">
-            <h1><span id="7"></span>7. Compilation et modularité <a class="chapter" href="#7">#</a></h1>
-            <h2><span id="7.1"></span>7.1 Compilation avec GCC, création d'un MAKEFILE <a class="chapter" href="#7.1">#</a></h2>
+            <h1><span class="anchor" id="7"></span>7. Compilation et modularité <a class="chapter" href="#7">#</a></h1>
+            <h2><span class="anchor" id="7.1"></span>7.1 Compilation avec GCC, création d'un MAKEFILE <a class="chapter" href="#7.1">#</a></h2>
             <p>
                 Le compilateur utilisé en cours est le <i>GNU C Compiler (gcc)</i>. Il permet de convertir le code source en code machine en spécifiant :
             </p>
@@ -1079,7 +1079,7 @@ de gauche à droite) passerait par :
                     <b>(i)</b> Les dépendances sont les fichiers qui, si ils ont été modifiés depuis la dernière compilation à l'aide de cette commande, nécessitent d'être recompilés. Ceci est pratique si la commande pour compiler est divisée en plusieurs sous-commandes afin de ne pas recompiler tout le projet à chaque fois. Dans le cadre des projets à l'ISMIN, la base de code ne devient jamais assez grande pour que ce soit nécessaire, mais c'est une bonne habitude à prendre pour plus tard.
                 </p>
             </hgroup>
-            <h2><span id="7.2"></span>7.2 Modularité <a class="chapter" href="#7.2">#</a></h2>
+            <h2><span class="anchor" id="7.2"></span>7.2 Modularité <a class="chapter" href="#7.2">#</a></h2>
             <p>
                 En C, la modularité correspond à la division des fichiers sources pour permettre de compiler en plusieurs blocs et de réutiliser du code. Tout comme depuis le début on utilise <code class="inline">#include &lt...></code> pour importer des librairies standards, on peut créer des librairies manuellement et les importer avec <code class="inline">#include "nom_de_ma_librarie.h"</code>.
             </p>

@@ -104,9 +104,9 @@ p  { font-size: 1.0rem; }
     
     h1, h2, h3, h4, h5, h6 { 
         position: relative;
-        span { position: absolute; top: -4.75rem; }
+        span.anchor { top: -4.75rem; position: absolute; }
     }
-    h1 span { top: -6rem; }
+    h1  span.anchor { top: -6.00rem; position: absolute; }
 
     h1, h2, h3 { padding-bottom: 1.0rem; }
     p          { padding-bottom: 0.6rem; }

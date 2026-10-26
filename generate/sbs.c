@@ -601,7 +601,7 @@ void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first, bool dire
                 if (elem.ti.text.data[0].str[id - 1] == '.') --id;
 
                 fprintf(f, 
-                    "%*s<h%zu><span id=\"%.*s\"></span>", (int)depth * 4, "", 
+                    "%*s<h%zu><span class=\"anchor\" id=\"%.*s\"></span>", (int)depth * 4, "", 
                     elem.ti.depth, (int)id, elem.ti.text.data[0].str
                 );
             }
