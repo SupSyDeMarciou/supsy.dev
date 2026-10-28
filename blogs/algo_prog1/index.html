@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../style.css" type="text/css"/>
-    <link rel="stylesheet" href="../external/prism.css"/>
+    <link rel="stylesheet" href="../../style.css" type="text/css"/>
+    <link rel="stylesheet" href="../../external/prism.css"/>
     <!-- <link rel="icon" href="icons/supsy.png"> -->
     <title>supsy.dev - Blog - Formation d'AlgoProg 1</title>
     <!-- <FONT> -->
@@ -12,15 +12,16 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,293;1,293&display=swap" rel="stylesheet">
     <!-- </FONT> -->
+    <base href="">
 </head>
 <body>
     <main>
         <header>
-            <p><a href="../index.html">SupSy<span class="text-accent">.dev</span></a></p>
+            <p><a href="../../index.html">SupSy<span class="text-accent">.dev</span></a></p>
             <p class="no-select">|</p>
-            <p><a href="../blog.html">Blog</a></p>
+            <p><a href="../../blog.html">Blog</a></p>
             <p class="no-select">|</p>
-            <p><a href="../projects.html">Projects</a></p>
+            <p><a href="../../projects.html">Projects</a></p>
         </header>
         <section>
             <h1><span class="anchor" id="Formation"></span>Formation d'AlgoProg 1 <a class="text-dim" href="#Formation">#</a></h1>
@@ -72,7 +73,7 @@
                 </li>
             </ol>
         </section>
-"        "<section>
+        <section>
             <h1><span class="anchor" id="1"></span>1. Qu'est-ce que C ? <a class="text-dim" href="#1">#</a></h1>
             <p>
                 Le <b>C</b> est un langage de programmation:
@@ -125,7 +126,7 @@
                 </li>
             </ul>
         </section>
-"        "<section>
+        <section>
             <h1><span class="anchor" id="2"></span>2. Synthaxe et structure du langage <a class="text-dim" href="#2">#</a></h1>
             <h2><span class="anchor" id="2.1"></span>2.1 Premier programme <a class="text-dim" href="#2.1">#</a></h2>
             <p>
@@ -447,7 +448,7 @@ int a = puissance2(2); // a = 4</code></pre>
                 </li>
             </ul>
         </section>
-"        "<section>
+        <section>
             <h1><span class="anchor" id="3"></span>3. Manipulations de la mémoire en C <a class="text-dim" href="#3">#</a></h1>
             <h2><span class="anchor" id="3.1"></span>3.1 Démystification des <i>pointeurs</i> <a class="text-dim" href="#3.1">#</a></h2>
             <p>
@@ -586,7 +587,7 @@ int main()
              // puisse être réallouée plus tard
 }</code></pre>
         </section>
-"        "<section>
+        <section>
             <h1><span class="anchor" id="4"></span>4. Chaînes de charactères <a class="text-dim" href="#4">#</a></h1>
             <p>
                 En C, les chaînes de charactères (ou <i>string</i> en anglais) sont des tableaux de charactères (<code class="inline">char</code>) se finissant pas un charactère nul <code class="inline">'\0'</code> (en anglais, elles sont décrites comme <i>null-terminated</i>). Lorsqu'on déclare une chaîne de charactère à l'aide de guillements, le compilateur ajoute automatiquement ce charactère nul à la fin de la chaîne :
@@ -642,7 +643,7 @@ int strlen(char *string)
                 <h3>/!\ ATTENTION ! UNE CHAÎNE DE CHARACTÈRES EST BIEN DÉFINIE AVEC DES GUILLEMENTS ! L'UTILISATION D'APOSTROPHES EST RÉSERVÉE AUX CHARACTÈRES (EXEMPLE: <code class="inline">'a'</code> EST UN UNIQUE CHARACTÈRE, <code class="inline">"a"</code> EST UNE CHAÎNE DE 1 CHARACTÈRE) /!\</h3>
             </hgroup>
         </section>
-"        "<section>
+        <section>
             <h1><span class="anchor" id="5"></span>5. Manipulation de flux (fichiers et entrées/sorties du terminal) <a class="text-dim" href="#5">#</a></h1>
             <p>
                 Il arrive parfois qu'on ait besoin de manipuler une donnée externe au programme, comme un fichier, le terminal ou d'autres joyeusetés qu'on ne va pas aborder. Alors, on peut définir un <b><i>flux</i></b> comme une interface abstraite pour lire/écrire des données depuis la structure soujacente, que ce soit un fichier ou le terminal.
@@ -797,7 +798,7 @@ scanf("int: %d, float: %f, char: %c, str: %.24s", &ampa, &ampf, &ampc, str);
 // On écrit "int: 2, float: 12.67, char: z, str: chaine de 24 charactères\n"
 // On s'attend à avoir a = 2, f = 12.67, c = `c`, str = "chaine de 24 charactères"</code></pre>
         </section>
-"        "<section>
+        <section>
             <h1><span class="anchor" id="6"></span>6. Structures de base <a class="text-dim" href="#6">#</a></h1>
             <h2><span class="anchor" id="6.1"></span>6.1 Liste chaînée <a class="text-dim" href="#6.1">#</a></h2>
             <p>
@@ -1006,7 +1007,7 @@ de gauche à droite) passerait par :
     |-------'       |
     '---------------'</code></pre>
         </section>
-"        "<section>
+        <section>
             <h1><span class="anchor" id="7"></span>7. Compilation et modularité <a class="text-dim" href="#7">#</a></h1>
             <h2><span class="anchor" id="7.1"></span>7.1 Compilation avec GCC, création d'un MAKEFILE <a class="text-dim" href="#7.1">#</a></h2>
             <p>
@@ -1148,7 +1149,7 @@ void myStructDestroy(MyStruct valeur_a_detruire)
             </hgroup>
         </section>
         <footer><p>Vlad MUNTEANU 2026 - All rights reserved.</p></footer>
-        <script src="../external/prism.js"></script>
+        <script src="../../external/prism.js"></script>
     </main>
 </body>
 </html>

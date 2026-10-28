@@ -601,7 +601,7 @@ void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first, bool dire
         {
             if (direct_section_descendant && elem.ti.depth == 1 && !first) 
             {
-                fprintf(f, "%*s</section>\n\"%*s\"<section>\n", ((int)depth - 1) * 4, "", ((int)depth - 1) * 4, "");
+                fprintf(f, "%*s</section>\n%*s<section>\n", ((int)depth - 1) * 4, "", ((int)depth - 1) * 4, "");
             }
 
             usize id = 0;
@@ -661,31 +661,44 @@ void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first, bool dire
 
 typedef union list_entry {
     struct {
-        const char *src;
-        const char *date;
+        const char *name;
+        const char *date_created;
+        const char *date_modified;
         const char *lang;
         const char *title;
-        const char *desc;
+        const char *description;
     };
-    const char *data[5];
+    const char *data[6];
 } list_entry;
 DEF_ARRAY(list_entry);
 DEF_CMP_FUNC(list_entry, lhs, rhs) { 
     int res;
-    if (res = strncmp(lhs->date + 7, rhs->date + 7, 4)) return res;
-    if (res = strncmp(lhs->date + 3, rhs->date + 3, 2)) return res;
-    if (res = strncmp(lhs->date + 0, rhs->date + 0, 2)) return res;
+    if (res = strncmp(lhs->date_created + 7, rhs->date_created + 7, 4)) return res;
+    if (res = strncmp(lhs->date_created + 3, rhs->date_created + 3, 2)) return res;
+    if (res = strncmp(lhs->date_created + 0, rhs->date_created + 0, 2)) return res;
     return 0;
 }
+int list_entry_cmp_mod(const list_entry *lhs, const list_entry *rhs)
+{
+    int res;
+    if (res = strncmp(lhs->date_modified + 7, rhs->date_modified + 7, 4)) return res;
+    if (res = strncmp(lhs->date_modified + 3, rhs->date_modified + 3, 2)) return res;
+    if (res = strncmp(lhs->date_modified + 0, rhs->date_modified + 0, 2)) return res;
+    return 0;
+}
+int list_entry_cmp_inv_mod(const list_entry *lhs, const list_entry *rhs) {
+    return -list_entry_cmp_mod(lhs, rhs);
+};
 
 list_entry list_entry_(const char *src, time_t tim, bool is_french, const char *title, const char *desc)
 {
     struct tm tm = *localtime(&tim);
-    char *date = strf("%02d/%02d/%04d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
+    char *creation_date = strf("%02d/%02d/%04d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
 
     return (list_entry) {
-        .src = src, .date = date, .lang = is_french ? "fr" : "en",
-        .title = title, .desc = desc
+        .name = src, 
+        .date_created = creation_date, .date_modified = creation_date, 
+        .lang = is_french ? "fr" : "en", .title = title, .description = desc
     };
 }
 
@@ -702,7 +715,7 @@ array(list_entry) load_list(const char *path)
     while (fgets(line, sizeof(line), f))
     {
         entry.data[data++] = strndup(line, strlen(line) - 1);
-        if (data == 5) {
+        if (data == sa_count(entry.data)) {
             data = 0;
             arrayAdd(ret, entry);
             if (!fgets(line, sizeof(line), f)) break;
@@ -717,15 +730,17 @@ void save_list(array(list_entry) le, const char *path)
     FILE *f = fopen(path, "w");
     if (!f) SL_terminate(-1, "Failed to open \"%s\"!", path);
 
-    arraySort(le, list_entry_cmp_inv);
+    // arraySort(le, list_entry_cmp_inv);
+    arraySort(le, list_entry_cmp_inv_mod);
     aforeach(e, le)
     {
-        fputs(e->src,   f); fputc('\n', f);
-        fputs(e->date,  f); fputc('\n', f);
-        fputs(e->lang,  f); fputc('\n', f);
-        fputs(e->title, f); fputc('\n', f);
-        fputs(e->desc,  f); fputc('\n', f);
-        if (e + 1 < __e_MAX__) fputc('\n', f);
+        fputs(e->name,          f); fputc('\n', f);
+        fputs(e->date_created,  f); fputc('\n', f);
+        fputs(e->date_modified, f); fputc('\n', f);
+        fputs(e->lang,          f); fputc('\n', f);
+        fputs(e->title,         f); fputc('\n', f);
+        fputs(e->description,   f); fputc('\n', f);
+        if (e + 1 < __e_MAX__)      fputc('\n', f);
     }
 
     fclose(f);
@@ -733,15 +748,19 @@ void save_list(array(list_entry) le, const char *path)
 void update_list(const char *path, list_entry new_entry)
 {
     array(list_entry) entries = load_list(path);
+    bool new = true;
     aforeach(e, entries)
     {
-        if (strcmp(e->src, new_entry.src) == 0)
+        if (strcmp(e->name, new_entry.name) == 0)
         {
-            arrayRemove(entries, aindex(e));
+            e->date_modified = new_entry.date_modified;
+            e->title         = new_entry.title;
+            e->description   = new_entry.description;
+            new = false;
             break;
         }
     }
-    arrayAdd(entries, new_entry);
+    if (new) arrayAdd(entries, new_entry);
     save_list(entries, path);
 }
 
@@ -749,7 +768,7 @@ void update_list(const char *path, list_entry new_entry)
 
 
 
-void generate_blog(const char *output_path, md_tree md)
+void generate_blog(const char *name, md_tree md)
 {
     char *default_blog = readEntireFile(ROOT"generate/default_blog.html", NULL);
     char *insert = strstr(default_blog, "<!-- <INSERT> -->");
@@ -761,8 +780,31 @@ void generate_blog(const char *output_path, md_tree md)
     const char *first_half  = default_blog;
     const char *second_half = insert + sizeof("<!-- <INSERT> -->"); 
 
-    FILE *f = fopen(output_path, "w");
-    if (!f) SL_terminate(-1, "Failed to open \"%s\"!", output_path);
+    const char *path = SBS_tmpf(ROOT"blogs/%s/index.html", name);
+    FILE *f = fopen(path, "w");
+    if (!f) SL_terminate(-1, "Failed to open \"%s\"!", path);
+    
+    fprintf(f, first_half, md.is_french ? "fr" : "en", md.title);
+    aforeach(el, md.elements) generate_html_elem(f, indent / 4, *el, aindex(el) == 0, true);
+    fputs(second_half, f);
+
+    fclose(f);
+}
+void generate_project(const char *name, md_tree md)
+{
+    char *default_project = readEntireFile(ROOT"generate/default_project.html", NULL);
+    char *insert = strstr(default_project, "<!-- <INSERT> -->");
+
+    int indent = 0;
+    while (insert - indent >= default_project && insert[-indent] != '\n') ++indent;
+    insert[1 - indent] = '\0';
+
+    const char *first_half  = default_project;
+    const char *second_half = insert + sizeof("<!-- <INSERT> -->"); 
+
+    const char *path = SBS_tmpf(ROOT"projects/%s/index.html", name);
+    FILE *f = fopen(path, "w");
+    if (!f) SL_terminate(-1, "Failed to open \"%s\"!", path);
     
     fprintf(f, first_half, md.is_french ? "fr" : "en", md.title);
     aforeach(el, md.elements) generate_html_elem(f, indent / 4, *el, aindex(el) == 0, true);
@@ -781,15 +823,18 @@ int main(int argc, char **argv)
         const char *blog_name = argc > 2 ? argv[2] : NULL;
         if (!blog_name) SL_terminate(-1, "Expected blog name!");
     
-        md_tree md = parse_md(strf(ROOT"generate/blogs/%s.md", blog_name));
-        printf("\n------\n\n");
-        // aforeach(e, md.elements) print_elem(e, 0);
-        // printf("\n------\n\n");
-        generate_blog(strf(ROOT"blogs/%s.html", blog_name), md);
-        SBS_logI("is_french=%d, title=\"%s\"", md.is_french, md.title);
-        
-        printf("\n------\n\n");
+        md_tree md = parse_md(strf(ROOT"blogs/%s/%s.md", blog_name, blog_name));
+        generate_blog(blog_name, md);
         update_list(ROOT"blog.list", list_entry_(blog_name, time(NULL), md.is_french, md.title, md.description));
+    }
+    else if (argc > 1 && strcmp(argv[1], "project") == 0)
+    {
+        const char *blog_name = argc > 2 ? argv[2] : NULL;
+        if (!blog_name) SL_terminate(-1, "Expected project name!");
+    
+        md_tree md = parse_md(strf(ROOT"projects/%s/%s.md", blog_name, blog_name));
+        generate_project(blog_name, md);
+        update_list(ROOT"project.list", list_entry_(blog_name, time(NULL), md.is_french, md.title, md.description));
     }
     else 
     {

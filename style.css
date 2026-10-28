@@ -117,6 +117,9 @@ section {
         li:not(:last-child) {
             padding-bottom: 1.0em;
         }
+        li :first-child {
+            padding-bottom: 0.5em;
+        }
     }
 
     hgroup {
