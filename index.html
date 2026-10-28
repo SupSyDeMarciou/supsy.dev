@@ -14,14 +14,14 @@
 </head>
 <body>
     <main>
-        <header class="section-base">
+        <header>
             <p><a href="index.html">SupSy<span class="text-accent">.dev</span></a></p>
             <p class="no-select">|</p>
             <p><a href="blog.html">Blog</a></p>
             <p class="no-select">|</p>
             <p><a href="projects.html">Projects</a></p>
         </header>
-        <section class="section-base home">
+        <section>
             <h1><a href="#">/home</a><span class="text-accent">/supsy</span></h1>
             <p>☝️🤓 Hi, I'm Vlad Munteanu (also going by SupSy) and this is my website where I post anything I feel like sharing!</p>
             <p>I am very fond of programming my little personnal projects, spending hours learning and researching a topic and sharing my work with whomever may be interested. I'd say I am a recreational programmer.</p>
@@ -32,18 +32,15 @@
                 <li><a href="https://linkedin.com/in/vladalexmunt"><b>LinkedIn:</b> https://linkedin.com/in/vladalexmunt</a></li>
             </ul>
         </section>
-        <section class="section-base blog">
+        <section>
             <h1><a href="blog.html">/blog</a><span class="text-accent">/latest</span></h1>
             <ul class="spaced" id="blog-list"></ul>
         </section>
-        <section class="section-base projects">
+        <section>
             <h1><a href="projects.html">/projects</a><span class="text-accent">/latest</span></h1>
             <ul class="spaced" id="project-list"></ul>
         </section>
-        <footer>
-            <div></div> <!-- Empty div for spacing, I don't really know why this works lol  -->
-            <p>Vlad MUNTEANU 2026 - All rights reserved.</p>
-        </footer>
+        <footer><p>Vlad MUNTEANU 2026 - All rights reserved.</p></footer>
         <script src="load_list.js"></script>
         <script>
             insertListEntries("blog.list",    document.getElementById("blog-list"),    3, "blog.html");

@@ -24,19 +24,10 @@
 /* <FONT> */
     font-family: "Atkinson Hyperlegible Mono", sans-serif;
     font-optical-sizing: auto;
-    /* font-weight: 300; */
-    /* font-style: normal; */
 /* </FONT> */
 }
-.no-select {
-    /* https://stackoverflow.com/a/4407335 */
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select:   none; /* Safari */
-     -khtml-user-select:   none; /* Konqueror HTML */
-       -moz-user-select:   none; /* Old versions of Firefox */
-        -ms-user-select:   none; /* Internet Explorer/Edge */
-            user-select:   none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
-}
+
+
 
 body {
     display: flex;
@@ -51,66 +42,76 @@ main {
     width: var(--CONTENT-WIDTH);
     color: var(--TEXT-BASE);
 }
+
+
+
+p, a, h1, h2, h3, h4, h5, h6 {
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.1em;
+}
 a  {
-    text-decoration-line: none;
     color: var(--TEXT-BASE);
+    text-decoration-line: none;
 }
-
-h1 { font-size: 2.25rem; }
-h2 { font-size: 1.5rem; }
-h3 { font-size: 1.15rem; }
-p  { font-size: 1.0rem; }
-@media screen and (width < 500px) {
-    h1 { font-size: calc(0.9 * 2.25rem); }
-    h2 { font-size: calc(0.9 * 1.5rem); }
-    h3 { font-size: calc(0.9 * 1.15rem); }
-    p  { font-size: calc(0.9 * 1.0rem); }
+a:hover {
+    color: var(--TEXT-HOVER);
+    text-decoration-line: underline;
+    text-decoration-color: var(--TEXT-HOVER);
+    
+    * { 
+        color: var(--TEXT-HOVER);
+        text-decoration-color: var(--TEXT-HOVER); 
+    }
 }
-@media screen and (width < 365px) {
-    h1 { font-size: calc(0.8 * 2.25rem); }
-    h2 { font-size: calc(0.8 * 1.5rem); }
-    h3 { font-size: calc(0.8 * 1.15rem); }
-    p  { font-size: calc(0.8 * 1.0rem); }
-}
-
-
-
-.text-base   { color: var(--TEXT-BASE); }
+i            { color: var(--TEXT-HOVER);  }
+.text-base   { color: var(--TEXT-BASE);   }
 .text-accent { color: var(--TEXT-ACCENT); }
-.text-dim    { color: var(--TEXT-DIM); }
+.text-dim    { color: var(--TEXT-DIM);    }
 .underline   { text-decoration-line: underline; }
+.no-select   {
+    /* https://stackoverflow.com/a/4407335 */
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select:   none; /* Safari */
+     -khtml-user-select:   none; /* Konqueror HTML */
+       -moz-user-select:   none; /* Old versions of Firefox */
+        -ms-user-select:   none; /* Internet Explorer/Edge */
+            user-select:   none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+}
 
-.section-base {
+
+
+body   { font-size: 1.00rem; }
+header { font-size: 1.50rem; }
+@media screen and (width < 480px) {
+    body   { font-size: 0.90rem; }
+    header { font-size: 1.15rem; }
+}
+@media screen and (width < 375px) {
+    body   { font-size: 0.80rem; }
+    header { font-size: 0.90rem; }
+}
+
+section {
     display: flex;
     flex-direction: column;
     position: relative;
-    top: 0px;
-    margin: 15px 0px;
+    top: 0;
+    margin: 1rem 0;
     padding: 1rem;
 
     background-color: var(--SECTION-BASE);
     border-radius: 15px;
     filter: drop-shadow(0 8px 0px var(--SECTION-SHADOW));
-
-    p, a, h1, h2, h3, h4, h5, h6 {
-        text-decoration-thickness: 1.5px;
-        text-underline-offset: 2.5px;
-    }
-    a:hover {
-        color: var(--TEXT-HOVER);
-        text-decoration-line: underline;
-        text-decoration-color: var(--TEXT-HOVER);
-    }
     
     h1, h2, h3, h4, h5, h6 { 
         position: relative;
-        span.anchor { top: -4.75rem; position: absolute; }
+        .anchor { top: -4.75rem; position: absolute; }
     }
-    h1  span.anchor { top: -6.00rem; position: absolute; }
+    h1  .anchor { top: calc(-2em - 1rem - 15px); }
 
-    h1, h2, h3 { padding-bottom: 1.0rem; }
-    p          { padding-bottom: 0.6rem; }
-    ul, ol     { padding-left:   2.0em;  }
+    h1, h2, h3, h4, h5, h6 { padding-bottom: 1.0rem; }
+    p      { padding-bottom: 0.6rem; }
+    ul, ol { padding-left:   2.0em;  }
     
     ul.spaced, ol.spaced {
         li:not(:last-child) {
@@ -118,55 +119,36 @@ p  { font-size: 1.0rem; }
         }
     }
 
-    .chapter {
-        color: var(--TEXT-DIM);
-    }
-
     hgroup {
         display: flex;
         flex-direction: column;
         position: relative;
-        top: 0px;
-        margin: 15px 0px;
-        padding: 12.5px;
+        top: 0;
+        margin: 1rem 0;
+        padding: 0.8rem;
 
         background-color: var(--INFO-BASE);
         border-radius: 15px;
-        filter: drop-shadow(0 8px 0px var(--SECTION-SHADOW));
+        filter: drop-shadow(0 8px 0 var(--SECTION-SHADOW));
+
+        :last-child { padding-bottom: 0; }
     }
     hgroup:hover {
         top: 2px;
         background-color: var(--INFO-HOVER);
-        filter: drop-shadow(0 6px 0px var(--SECTION-SHADOW));
-    }
-
-    code.inline {
-        position: relative;
-        top: -2px;
-        padding: 0px 4px;
-        /* padding: 2px; */
-
-        color: var(--TEXT-CODE);
-        background-color: var(--BG-CODE-BASE);
-        border-radius: 5px;
-        filter: drop-shadow(0 4px 0px var(--SECTION-SHADOW));
-    }
-    code.inline:hover {
-        top: 0px;
-        background-color: var(--BG-CODE-HOVER);
-        filter: drop-shadow(0 2px 0px var(--SECTION-SHADOW));
+        filter: drop-shadow(0 6px 0 var(--SECTION-SHADOW));
     }
 
     pre.code-box {
         position: relative;
-        top: 0px;
-        margin: 1em 0em;
+        top: 0;
+        margin: 1em 0;
         padding-bottom: 2px;
 
         color: var(--TEXT-CODE);
         background-color: var(--BG-CODE-BASE);
-        border-radius: 5px;
-        filter: drop-shadow(0 -4px 0px var(--BG-CODE-SHADOW));
+        border-radius: 15px;
+        filter: drop-shadow(0 -4px 0 var(--BG-CODE-SHADOW));
         
         overflow-x: scroll;
         scrollbar-color: var(--TEXT-ACCENT) #00000000;
@@ -175,59 +157,84 @@ p  { font-size: 1.0rem; }
     pre.code-box:hover {
         top: 2px;
         margin-bottom: calc(1em + 2px);
-        padding-bottom: 0px;
+        padding-bottom: 0;
+        filter: drop-shadow(0 -6px 0 var(--BG-CODE-SHADOW));
+    }
 
+    code.inline {
+        position: relative;
+        top: -2px;
+        padding: 0 4px;
+
+        color: var(--TEXT-CODE);
+        background-color: var(--BG-CODE-BASE);
+        border-radius: 5px;
+        filter: drop-shadow(0 4px 0 var(--BG-CODE-SHADOW));
+    }
+    code.inline:hover {
+        top: 0;
+        background-color: var(--BG-CODE-HOVER);
+        filter: drop-shadow(0 2px 0 var(--BG-CODE-SHADOW));
+    }
+
+    img {
+        --IMG-OUTLINE-WIDTH: 4px;
+        
+        position: relative;
+        top: 0px;
+        left: var(--IMG-OUTLINE-WIDTH);
+        width: calc(100% - 2 * var(--IMG-OUTLINE-WIDTH));
+        
+        outline: solid var(--IMG-OUTLINE-WIDTH) var(--BG-CODE-BASE);
+
+        border-radius: calc(15px - var(--IMG-OUTLINE-WIDTH));
+        filter: drop-shadow(0 8px 0 var(--BG-CODE-SHADOW));
+    }
+    img:hover {
+        top: 4px;
         /* background-color: var(--BG-CODE-HOVER); */
-        filter: drop-shadow(0 -6px 0px var(--BG-CODE-SHADOW));
+        filter: drop-shadow(0 4px 0 var(--BG-CODE-SHADOW));
     }
 }
-.section-base:last-child { margin-bottom: 0; }
-.section-base:last-child:last-child { margin-bottom: 0; }
-.section-base:hover {
+section:last-child            { padding-bottom: 0; margin-bottom: 0; }
+section:last-child:last-child { padding-bottom: 0; margin-bottom: 0; }
+section:hover {
     top: 2px;
     background-color: var(--SECTION-HOVER);
-    filter: drop-shadow(0 6px 0px var(--SECTION-SHADOW));
+    filter: drop-shadow(0 6px 0 var(--SECTION-SHADOW));
 }
 
 
 
-header.section-base {
+header {
+    display: flex;
     flex-direction: row;
-    margin-top: 0px;
-    /* TODO: find a ways to make pressing work with page scroll */
     position: sticky;
-    
+    top: 0;
+    padding: 1rem;
+
     z-index: 1;
+    background-color: var(--SECTION-BASE);
     border-radius: 0 0 15px 15px;
+    filter: drop-shadow(0 8px 0 var(--SECTION-SHADOW));
 
-    p {
-        margin-right: 0.55em;
-        padding: 0px;
-        font-size: 1.5rem;
-    }
-    p:last-child { margin-right: 0em; }
+    p           { margin-right: 0.55em; }
+    :last-child { margin-right: 0;      }
 }
-header.section-base:hover { top: 0px; }
-@media screen and (width < 500px) {
-    header.section-base p { font-size: 1.2rem; }
+header:hover { 
+    background-color: var(--SECTION-HOVER);
 }
-@media screen and (width < 365px) {
-    header.section-base p { font-size: 1.0rem; }
-}
-
-
 
 footer {
-    div { 
-        height: 3.0rem;
-    }
+    font-size: 0.8rem;
+    height: 2.0em;
+
     p {
         position: absolute;
-        bottom: 0.5rem;
+        bottom: 0.5em;
         width: 100%;
         
-        color: #555555;
-        font-size: 0.8rem;
+        color: var(--TEXT-DIM);
         text-align: center;
     }
 }

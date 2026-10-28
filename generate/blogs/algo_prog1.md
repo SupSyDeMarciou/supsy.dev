@@ -130,7 +130,7 @@ break;
 
 > **(i)** La synthaxe du `switch-case` est très étrange à premier abord car elle provient à l'origine d'une optimisation pour du code en *assembleur* dans lequel il n'y a pas de fonctions ou d'énoncés de flow de contrôles (comme dans les langages plus *haut niveau*) mais uniquement des `label` (nom donné à une position précise dans le code) et des instructions de `jump` conditionnels ou non (`jump` permet notamment de passer à l'execution séquencielle depuis un `label` si une condition est respectée).
 
-> **(i)** La synthaxe de la boucle `for` n'impose pas de compter jusqu'à `N` avec un entier qui incrémente à chaque itération, on peut faire bien plus (***cf. [6.1](#6.1)*** pour un exemple de parcours de liste chaînée utilisant une boucle `for`). 
+> **(i)** La synthaxe de la boucle `for` n'impose pas de compter jusqu'à `N` avec un entier qui incrémente à chaque itération, on peut faire bien plus (***[cf. 6.1](#6.1)*** pour un exemple de parcours de liste chaînée utilisant une boucle `for`). 
 
 ## 2.3 Utiliser une variable
 Comme évoqué précédement, le C est un langage fortement typé ce qui impose donc aux variables d'avoir un type explicitement défini :
@@ -279,7 +279,7 @@ int a = puissance2(2); // a = 4
 
 Il est à noter que les paramètres de fonctions sont des copies des expression passées en entrée lors de l'appel ce qui implique donc qu'une fonction ne peut pas modifier ses paramètres d'entrée en dehors du contexte de la fonction. Ceci a deux conséquences :
 - On ne peut pas modifier les valeurs originales en entrée, donc on peut modifier les valeurs des paramètres d'entrée sans avoir peur de modifier leurs valeurs originales. On peut alors considérer que les paramètres d'entrée d'une fonction sont déclarés dans la même *scope* que le reste de la définition de la fonction (ce qui est cohérent avec la synthaxe de déclaration de la liste de paramètres)
-- On ne peut pas modifier les valeurs originales en entrée, donc il faut employer un autre mécanisme si on veut être capable de le faire : les pointeurs ***(cf. [3.1](#3.1))***. En prenant des pointeurs en argument, une fonction peut alors modifier les données pointées sans soucis.
+- On ne peut pas modifier les valeurs originales en entrée, donc il faut employer un autre mécanisme si on veut être capable de le faire : les pointeurs ***([cf. 3.1](#3.1))***. En prenant des pointeurs en argument, une fonction peut alors modifier les données pointées sans soucis.
 
 ## 2.6 Les directives de préprocesseur *(qui commencent par `#`)*
 Les directives de préprocesseur sont des instructions qui seront exécutées avant que le programme soit compilé : elles modifient directement le code source.  
@@ -381,7 +381,7 @@ De plus, comme la pile est de taille fixe déterminée au lancement du programme
 > **(i)** Un *stack overflow* arrive souvent lors d'appels récursifs si la condition d'arrêt n'est jamais atteinte.
 
 ### 3.2.2 Le tas
-La pile nous permet déjà d'accomplir tout un tas de fonctionnalités et sera suffisante dans la majorité des cas, mais il arrive parfois qu'un programme ait besoin de réserver une zone de mémoire qui perdure après la fin de l'appel d'une fonction. Dans ce cas, il réserve une zone mémoire dans le ***tas*** (*heap* en anglais), une zone de la mémoire qui n'est associée à aucune fonction et qui n'est donc pas éphémère. Grâce à cette mémoire plus durable, on va être capable de manipuler des données dont la taille n'est pas forcément connue à la compilation (exemple : un tableau d'entiers dont la taille dépend d'un calcul) ou qui ne doivent pas être limitées au contexte d'une fonction (exemple : listes chaînées, ***cf. [6.1](#6.1)***).  
+La pile nous permet déjà d'accomplir tout un tas de fonctionnalités et sera suffisante dans la majorité des cas, mais il arrive parfois qu'un programme ait besoin de réserver une zone de mémoire qui perdure après la fin de l'appel d'une fonction. Dans ce cas, il réserve une zone mémoire dans le ***tas*** (*heap* en anglais), une zone de la mémoire qui n'est associée à aucune fonction et qui n'est donc pas éphémère. Grâce à cette mémoire plus durable, on va être capable de manipuler des données dont la taille n'est pas forcément connue à la compilation (exemple : un tableau d'entiers dont la taille dépend d'un calcul) ou qui ne doivent pas être limitées au contexte d'une fonction (exemple : listes chaînées, ***[cf. 6.1](#6.1)***).  
 
 **Cependant, c'est maintenant la responsabilité du programmeur de libérer cette mémoire une fois qu'elle n'est plus utilisée, contrairement au variables éphémères qui sont libérées automatiquement à la complétion d'une fonction.**
 En effet, si la mémoire est allouée mais jamais libérée, on arrive au mếme problème que lors d'un stack overflow : le tas va se saturer et ne pourra plus réserver de nouvelle zone.
@@ -460,7 +460,7 @@ Plusieurs fonctions de manipulation de chaînes de charactères sont définies d
 - `int strlen(char *str)` : renvoie la longeur de la chaîne de charactères
 - `strcpy(char *destination, char *source)` : copie la chaîne `source` dans la chaîne `destination`.
 - `int strcmp(char *str1, char *str2)` : compare deux chaînes de charactères dans l'ordre lexicographique. Si la sortie vaut 0, les deux chaînes sont identiques.
-- `sprintf(char *destination, char *format, ...)` : impression d'un texte formaté dans une chaîne de charactères ***(cf. [5.3](#5.3))***.
+- `sprintf(char *destination, char *format, ...)` : impression d'un texte formaté dans une chaîne de charactères ***([cf. 5.3](#5.3))***.
 
 > ### /!\ ATTENTION ! UNE CHAÎNE DE CHARACTÈRES EST BIEN DÉFINIE AVEC DES GUILLEMENTS ! L'UTILISATION D'APOSTROPHES EST RÉSERVÉE AUX CHARACTÈRES (EXEMPLE: `'a'` EST UN UNIQUE CHARACTÈRE, `"a"` EST UNE CHAÎNE DE 1 CHARACTÈRE) /!\
 
@@ -475,13 +475,13 @@ On retrouve pour l'écriture :
 - `fwrite(void *pointer_to_values, size_t sizeof_value, size_t number_of_values, FILE *file)` : écriture d'une ou plusieurs donnée(s) arbitraire(s) dans un fichier.
 - `fputc(int character, FILE *file)` : écriture d'un unique charactère dans un fichier.
 - `fputs(char *string, FILE *file)` : écriture d'une chaîne de charactères dans un fichier.
-- `fprintf(FILE *file, char *format, ...)` : écriture d'un texte formaté dans un fichier ***(cf. [5.3](#5.3))***.  
+- `fprintf(FILE *file, char *format, ...)` : écriture d'un texte formaté dans un fichier ***([cf. 5.3](#5.3))***.  
 
 Et pour la lecture :
 - `fread(void *pointer_to_values, size_t sizeof_value, size_t number_of_values, FILE *file)` : lecture d'une ou plusieurs donnée(s) arbitraire(s) depuis un fichier.
 - `fgetc(int character, FILE *file)` : lecture d'un unique charactère depuis un fichier.
 - `fgets(char *string, FILE *file)` : lecture d'une chaîne de charactères depuis un fichier. Cette chaîne se termine par `\n` ou la fin du fichier.
-- `fscanf(FILE *file, char *format, ...)` : analyse d'un texte formaté depuis un fichier ***(cf. [5.3](#5.3))***.
+- `fscanf(FILE *file, char *format, ...)` : analyse d'un texte formaté depuis un fichier ***([cf. 5.3](#5.3))***.
 
 > **(i)** Les entrées et sorties du terminal sont elles-aussi des flux, et sont nommés `stdin` *(STanDard INput, entrée textuelle de l'utilisateur)* et `stdout` *(STanDard OUtput, texte affichée sur le terminal)*, on pourrait donc utiliser les fonctions préfixés par `f`. Cependant, la librairie standard propose aussi des fonctions d'écritures de fichiers qui sont spécifiquement dirigées vers le terminal (celles-ci n'ont alors pas le préfixe `f` et sont donc les fameux `printf` et `scanf`).
 

@@ -3,6 +3,9 @@
 #define SL_IMPLEMENTATION
 #include <SL/sl.h>
 
+#define ROOT "/home/supsy/Coding/SupSy/supsy.dev/"
+
+
 
 typedef struct file_loc
 {
@@ -16,16 +19,17 @@ typedef struct file_loc
 
 
 #pragma region MARKDOWN
-typedef enum g_text_type
+typedef enum g_inline_type
 {
-    TEXT_BOLD   = 0b00000001, // single stars
-    TEXT_ITALIC = 0b00000010, // double stars
-    TEXT_CODE   = 0b00000100, // monospace font with background
-    TEXT_NEWL   = 0b00001000, // newline
-    TEXT_LINK   = 0b00010000, // link to external element or element id
-} g_text_type;
+    INLINE_BOLD   = 0b00000001, // single stars
+    INLINE_ITALIC = 0b00000010, // double stars
+    INLINE_CODE   = 0b00000100, // monospace font with background
+    INLINE_NEWL   = 0b00001000, // newline
+    INLINE_LINK   = 0b00010000, // link to external element or element id
+    INLINE_IMAGE  = 0b00100000, // inline image
+} g_inline_type;
 
-typedef enum g_elem_type
+typedef enum g_element_type
 {
     ELEM_NONE = 0,
     ELEM_BREAK,
@@ -36,37 +40,36 @@ typedef enum g_elem_type
     ELEM_LIST_ITEM,
     ELEM_CODE,
     ELEM_BOX,
-} g_elem_type;
+} g_element_type;
 
-typedef struct g_text  g_text;
-typedef struct g_list  g_list;
-typedef struct g_title g_title;
-typedef struct g_para  g_para;
-typedef struct g_code  g_code;
-typedef struct g_box   g_box;
-typedef struct g_elem  g_elem;
+typedef struct g_inline  g_inline;
+typedef struct g_list    g_list;
+typedef struct g_title   g_title;
+typedef struct g_para    g_para;
+typedef struct g_code    g_code;
+typedef struct g_box     g_box;
+typedef struct g_elem    g_elem;
 
-DEF_ARRAY(g_text);
+DEF_ARRAY(g_inline);
 DEF_ARRAY(g_list);
 DEF_ARRAY(g_elem);
 
-
-struct g_text
+struct g_inline
 {
     file_loc loc;
-    g_text_type type;
+    g_inline_type type;
     char *str, *link;
 };
 
 struct g_title
 {
     usize depth;
-    array(g_text) text;
+    array(g_inline) text;
 };
 
 struct g_para
 {
-    array(g_text) text;
+    array(g_inline) text;
 };
 
 struct g_list
@@ -91,14 +94,14 @@ struct g_box
 struct g_elem
 {
     file_loc loc;
-    g_elem_type type;
+    g_element_type type;
     union {
-        g_text  te;
-        g_title ti;
-        g_para  pa;
-        g_list  li;
-        g_code  co;
-        g_box   bx;
+        g_inline in;
+        g_title  ti;
+        g_para   pa;
+        g_list   li;
+        g_code   co;
+        g_box    bx;
     };
 };
 #define g_elem_(type_, loc_, ...) ((g_elem){.type = type_, .loc = loc_, ##__VA_ARGS__})
@@ -109,21 +112,22 @@ void print_elem(g_elem *elem, usize indent)
         case ELEM_BREAK: info(elem->loc, "%*s<BREAK>", (int)indent * 4, ""); break;
         case ELEM_TEXT: {
             const char *tag = NULL;
-            if (elem->te.type & TEXT_BOLD)   tag = tag ? strf("%s|bold", tag)   : "bold";
-            if (elem->te.type & TEXT_ITALIC) tag = tag ? strf("%s|italic", tag) : "italic";
-            if (elem->te.type & TEXT_CODE)   tag = tag ? strf("%s|code", tag)   : "code";
-            if (elem->te.type & TEXT_LINK)   tag = tag ? strf("%s|link", tag)   : "link";
+            if (elem->in.type & INLINE_BOLD)   tag = tag ? strf("%s|bold", tag)   : "bold";
+            if (elem->in.type & INLINE_ITALIC) tag = tag ? strf("%s|italic", tag) : "italic";
+            if (elem->in.type & INLINE_CODE)   tag = tag ? strf("%s|code", tag)   : "code";
+            if (elem->in.type & INLINE_LINK)   tag = tag ? strf("%s|link", tag)   : "link";
+            if (elem->in.type & INLINE_IMAGE)  tag = tag ? strf("%s|img", tag)    : "img";
             
-            if      (elem->te.type == 0)         info(elem->te.loc, "%*s\"%s\"", (int)indent * 4, "", elem->te.str);
-            else if (elem->te.type == TEXT_NEWL) info(elem->te.loc, "%*s<br>", (int)indent * 4, "");
-            else                                 info(elem->te.loc, "%*s<%s> \"%s\" </%s>", (int)indent * 4, "", tag, elem->te.str, tag);
+            if      (elem->in.type == 0)         info(elem->in.loc, "%*s\"%s\"", (int)indent * 4, "", elem->in.str);
+            else if (elem->in.type == INLINE_NEWL) info(elem->in.loc, "%*s<br>", (int)indent * 4, "");
+            else                                 info(elem->in.loc, "%*s<%s> \"%s\" </%s>", (int)indent * 4, "", tag, elem->in.str, tag);
         } break;
         case ELEM_TITLE: {
             char tag[32] = "################################";
             info(elem->loc, "%*s%.*s {", (int)indent * 4, "", (int)elem->ti.depth, tag);
             aforeach(te, elem->ti.text)
             {
-                g_elem as_el = { .type = ELEM_TEXT, .te = *te }; 
+                g_elem as_el = { .type = ELEM_TEXT, .in = *te }; 
                 print_elem(&as_el, indent + 1);
             }
             info(elem->loc, "%*s}", (int)indent * 4, "");
@@ -132,7 +136,7 @@ void print_elem(g_elem *elem, usize indent)
             info(elem->loc, "%*sp {", (int)indent * 4, "");
             aforeach(te, elem->pa.text)
             {
-                g_elem as_el = { .type = ELEM_TEXT, .loc = te->loc, .te = *te }; 
+                g_elem as_el = { .type = ELEM_TEXT, .loc = te->loc, .in = *te }; 
                 print_elem(&as_el, indent + 1);
             }
             info(elem->loc, "%*s}", (int)indent * 4, "");
@@ -190,19 +194,19 @@ char *readline(md_reader *md)
     return md->line;
 }
 
-g_text parse_md_text(md_reader *md, g_text_type *type)
+g_inline parse_md_inline(md_reader *md, g_inline_type *type)
 {   
-    g_text text = { .loc = md->loc, .type = *type, .str = NULL };
+    g_inline text = { .loc = md->loc, .type = *type, .str = NULL };
     if (strcmp(&md_at(md), "  ") == 0)
     {
-        text.type = TEXT_NEWL;
+        text.type = INLINE_NEWL;
         md_mv(md, 2);
         return text;
     }
 
-    const bool is_code   = (*type & TEXT_CODE)   == TEXT_CODE;
-    const bool is_italic = (*type & TEXT_ITALIC) == TEXT_ITALIC;
-    const bool is_bold   = (*type & TEXT_BOLD)   == TEXT_BOLD;
+    const bool is_code   = (*type & INLINE_CODE)   == INLINE_CODE;
+    const bool is_italic = (*type & INLINE_ITALIC) == INLINE_ITALIC;
+    const bool is_bold   = (*type & INLINE_BOLD)   == INLINE_BOLD;
     
     // info(md->loc, "parse_md_text(is_bold=%d, is_italic=%d, is_code=%d) = \"%s\"", is_bold, is_italic, is_code, md->line + md->loc.c);
     while (md_at(md))
@@ -213,13 +217,13 @@ g_text parse_md_text(md_reader *md, g_text_type *type)
             {
                 if (text.loc.c != md->loc.c) text.str = strndup(md->line + text.loc.c, md->loc.c - text.loc.c);
                 md_mv(md, 2);
-                *type &= ~TEXT_BOLD;
+                *type &= ~INLINE_BOLD;
                 return text;
             }
             if (!isspace(md_at(md, 2))) {
                 md_mv(md, 2);
-                *type |= TEXT_BOLD;
-                if (text.loc.c == md->loc.c - 2) return parse_md_text(md, type);
+                *type |= INLINE_BOLD;
+                if (text.loc.c == md->loc.c - 2) return parse_md_inline(md, type);
 
                 text.str = strndup(md->line + text.loc.c, md->loc.c - 2 - text.loc.c);
                 return text;
@@ -232,13 +236,13 @@ g_text parse_md_text(md_reader *md, g_text_type *type)
             {
                 if (text.loc.c != md->loc.c) text.str = strndup(md->line + text.loc.c, md->loc.c - text.loc.c);
                 md_mv(md, 1);
-                *type &= ~TEXT_ITALIC;
+                *type &= ~INLINE_ITALIC;
                 return text;
             }
             if (!isspace(md_at(md, 1))) {
                 md_mv(md, 1);
-                *type |= TEXT_ITALIC;
-                if (text.loc.c == md->loc.c - 1) return parse_md_text(md, type);
+                *type |= INLINE_ITALIC;
+                if (text.loc.c == md->loc.c - 1) return parse_md_inline(md, type);
 
                 text.str = strndup(md->line + text.loc.c, md->loc.c - 1 - text.loc.c);
                 return text;
@@ -251,13 +255,13 @@ g_text parse_md_text(md_reader *md, g_text_type *type)
             {
                 if (text.loc.c != md->loc.c) text.str = strndup(md->line + text.loc.c, md->loc.c - text.loc.c);
                 md_mv(md, 1);
-                *type &= ~TEXT_CODE;
+                *type &= ~INLINE_CODE;
                 return text;
             }
             if (!isspace(md_at(md, 1))) {
                 md_mv(md, 1);
-                *type |= TEXT_CODE;
-                if (text.loc.c == md->loc.c - 1) return parse_md_text(md, type);
+                *type |= INLINE_CODE;
+                if (text.loc.c == md->loc.c - 1) return parse_md_inline(md, type);
 
                 text.str = strndup(md->line + text.loc.c, md->loc.c - 1 - text.loc.c);
                 return text;
@@ -292,13 +296,13 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
                 goto TEXT;
             }
             while (md_at(md) == ' ') md_mv(md, 1);
-            g_text_type t_type = 0;
+            g_inline_type t_type = 0;
             while (md_at(md))
             {
-                g_text t = parse_md_text(md, &t_type);
+                g_inline t = parse_md_inline(md, &t_type);
                 if (t.str == NULL) continue;
                 arrayAdd(title.ti.text, t);
-                if (t.type == TEXT_NEWL) break;
+                if (t.type == INLINE_NEWL) break;
             }
             arrayAdd(*elements, title);
         } break;
@@ -425,16 +429,16 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
             g_elem paragraph = g_elem_(ELEM_PARAGRAPH, md->loc);
             if (concat) paragraph.pa = arrayLast(*elements)->pa;
 
-            g_text_type t_type = 0;
+            g_inline_type t_type = 0;
             while (md_at(md))
             {
-                g_text t = parse_md_text(md, &t_type);
-                if (t.type == TEXT_NEWL) arrayAdd(paragraph.pa.text, t);
+                g_inline t = parse_md_inline(md, &t_type);
+                if (t.type == INLINE_NEWL) arrayAdd(paragraph.pa.text, t);
                 if (t.str == NULL) continue;
 
 
                 const char *at = strstr(t.str, "](");
-                if ((t.type & TEXT_CODE) == 0 && at) // Most likely a link
+                if ((t.type & INLINE_CODE) == 0 && at) // Most likely a link
                 {
                     const char *start = NULL, *end = NULL;
                     for (int i = 0; !start || !end || at[i] || at - i >= t.str; ++i)
@@ -447,24 +451,25 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
                         char *base = t.str;
                         char *label = strndup(start + 1, at - start - 1);
                         char *link  = strndup(at    + 2, end - at - 2);
+                        const bool is_img = start[-1] == '!';
 
                         if (start > base)
                         {
-                            t.str  = strndup(base, start - base);
+                            t.str  = strndup(base, start - base - is_img);
                             t.link = NULL;
                             arrayAdd(paragraph.pa.text, t);
                         }
                         
                         t.str   = label;
                         t.link  = link;
-                        t.type |= TEXT_LINK;
+                        t.type |= is_img ? INLINE_IMAGE : INLINE_LINK;
                         arrayAdd(paragraph.pa.text, t);
                         
                         if (end[1])
                         {
                             t.str   = strdup(end + 1);
                             t.link  = NULL;
-                            t.type &= ~TEXT_LINK;
+                            t.type &= ~(INLINE_LINK | INLINE_IMAGE);
                             arrayAdd(paragraph.pa.text, t);
                         }
                         
@@ -527,28 +532,33 @@ md_tree parse_md(const char *source_path)
 
 
 #pragma region GENERATE
-bool generate_html_text(FILE *f, g_text text)
+bool generate_html_inline(FILE *f, g_inline text)
 {
-    if (text.type == TEXT_NEWL) 
+    if (text.type == INLINE_NEWL) 
     {
-        fprintf(f, "<br>");
+        fprintf(f, "<br/>");
         return true;
     }
+    if (text.type & INLINE_IMAGE)
+    {
+        fprintf(f, "<img src=\"%s\" alt=\"%s\"/>", text.link, text.str);
+        return false;
+    }
     
-    if (text.type & TEXT_BOLD)   fputs("<b>", f);
-    if (text.type & TEXT_ITALIC) fputs("<i>", f);
-    if (text.type & TEXT_CODE)   fputs("<code class=\"inline\">", f);
-    if (text.type & TEXT_LINK)   fprintf(f, "<a class=\"text-accent underline\" href=\"%s\">", text.link);
+    if (text.type & INLINE_BOLD)   fputs("<b>", f);
+    if (text.type & INLINE_ITALIC) fputs("<i>", f);
+    if (text.type & INLINE_CODE)   fputs("<code class=\"inline\">", f);
+    if (text.type & INLINE_LINK)   fprintf(f, "<a class=\"text-accent underline\" href=\"%s\">", text.link);
     for (char *p = text.str; *p; ++p)
     {
         if      (*p == '&') fputs("&amp", f);
         else if (*p == '<') fputs("&lt", f);
         else                fputc(*p, f);
     }
-    if (text.type & TEXT_LINK)   fputs("</a>", f);
-    if (text.type & TEXT_CODE)   fputs("</code>", f);
-    if (text.type & TEXT_ITALIC) fputs("</i>", f);
-    if (text.type & TEXT_BOLD)   fputs("</b>", f);
+    if (text.type & INLINE_LINK)   fputs("</a>", f);
+    if (text.type & INLINE_CODE)   fputs("</code>", f);
+    if (text.type & INLINE_ITALIC) fputs("</i>", f);
+    if (text.type & INLINE_BOLD)   fputs("</b>", f);
 
     return false;
 }
@@ -581,7 +591,7 @@ void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first, bool dire
             fprintf(f, "%*s<p>\n%*s", (int)depth * 4, "", ((int)depth + 1) * 4, "");
             aforeach(text, elem.pa.text)
             {
-                if (generate_html_text(f, *text))
+                if (generate_html_inline(f, *text))
                     fprintf(f, "\n%*s", ((int)depth + 1) * 4, "");
             }
             fprintf(f, "\n%*s</p>\n", (int)depth * 4, "");
@@ -589,9 +599,9 @@ void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first, bool dire
 
         case ELEM_TITLE: 
         {
-            if (!first && elem.ti.depth == 1) {
-                fprintf(f, "%*s</section>\n", ((int)depth - 1) * 4, "");
-                fprintf(f, "%*s<section class=\"section-base blog\">\n", ((int)depth - 1) * 4, "");
+            if (direct_section_descendant && elem.ti.depth == 1 && !first) 
+            {
+                fprintf(f, "%*s</section>\n\"%*s\"<section>\n", ((int)depth - 1) * 4, "", ((int)depth - 1) * 4, "");
             }
 
             usize id = 0;
@@ -606,13 +616,12 @@ void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first, bool dire
                 );
             }
             else fprintf(f, "%*s<h%zu>", (int)depth * 4, "", elem.ti.depth);
-            aforeach(text, elem.ti.text) generate_html_text(f, *text);
-            
+            aforeach(text, elem.ti.text) generate_html_inline(f, *text);
             
             if (direct_section_descendant)
             {
                 fprintf(f, 
-                    " <a class=\"chapter\" href=\"#%.*s\">#</a>",
+                    " <a class=\"text-dim\" href=\"#%.*s\">#</a>",
                     (int)id, elem.ti.text.data[0].str
                 );
             }
@@ -742,54 +751,26 @@ void update_list(const char *path, list_entry new_entry)
 
 void generate_blog(const char *output_path, md_tree md)
 {
-    // FILE *f = stdout;
+    char *default_blog = readEntireFile(ROOT"generate/default_blog.html", NULL);
+    char *insert = strstr(default_blog, "<!-- <INSERT> -->");
+
+    int indent = 0;
+    while (insert - indent >= default_blog && insert[-indent] != '\n') ++indent;
+    insert[1 - indent] = '\0';
+
+    const char *first_half  = default_blog;
+    const char *second_half = insert + sizeof("<!-- <INSERT> -->"); 
+
     FILE *f = fopen(output_path, "w");
     if (!f) SL_terminate(-1, "Failed to open \"%s\"!", output_path);
     
-    fprintf(f, 
-        "<!DOCTYPE html>\n"
-        "<html lang=\"%s\">\n"
-        "<head>\n"
-        "    <meta charset=\"UTF-8\">\n"
-        "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-        "    <link rel=\"stylesheet\" href=\"../style.css\" type=\"text/css\"/>\n"
-        "    <link rel=\"stylesheet\" href=\"../external/prism.css\"/>"
-        "    <!-- <link rel=\"icon\" href=\"icons/supsy.png\"> -->\n"
-        "    <title>supsy.dev - Blog - %s</title>\n"
-        "    <!-- <FONT> -->\n"
-        "        <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n"
-        "        <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n"
-        "        <link href=\"https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,293;1,293&display=swap\" rel=\"stylesheet\">\n"
-        "    <!-- </FONT> -->\n"
-        "</head>\n"
-        "<body>\n"
-        "    <main>\n"
-        "        <header class=\"section-base\">\n"
-        "            <p><a href=\"../index.html\">SupSy<span class=\"text-accent\">.dev</span></a></p>\n"
-        "            <p class=\"no-select\">|</p>\n"
-        "            <p><a href=\"../blog.html\">Blog</a></p>\n"
-        "            <p class=\"no-select\">|</p>\n"
-        "            <p><a href=\"../projects.html\">Projects</a></p>\n"
-        "        </header>\n"
-        "        <section class=\"section-base blog\">\n"
-        ,
-        md.is_french ? "fr" : "en", md.title
-    );
-    aforeach(el, md.elements) generate_html_elem(f, 3, *el, aindex(el) == 0, true);
-    fprintf(f,
-        "        </section>\n"
-        "        <footer><div></div><p>Vlad MUNTEANU 2026 - All rights reserved.</p></footer>\n"
-        "        <script src=\"../external/prism.js\"></script>\n"
-        "    </main>\n"
-        "</body>\n"
-        "</html>"
-    );
+    fprintf(f, first_half, md.is_french ? "fr" : "en", md.title);
+    aforeach(el, md.elements) generate_html_elem(f, indent / 4, *el, aindex(el) == 0, true);
+    fputs(second_half, f);
 
     fclose(f);
 }
 #pragma endregion GENERATE
-
-#define ROOT "/home/supsy/Coding/SupSy/supsy.dev/"
 
 int main(int argc, char **argv)
 {
