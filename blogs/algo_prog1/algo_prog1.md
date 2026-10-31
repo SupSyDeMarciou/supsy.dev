@@ -226,10 +226,11 @@ typedef struct MyStruct {
 
 // Assignation d'une valeur à notre variable de type structurée
 MyStructType variable = (MyStructType){ .x = 42, .y = 0.987, .c = 'a' };
-//                  ~~~~~~~~~~  ~~~~~~~
-//                  ^           ^
-//                  |           Assignation de la variable interne (ou champs) `x` du type `MyStruct`
-//                  Nom entres parenthèses pour expliciter le type qu'on veut utiliser
+//                      ~~~~~~~~~~~~~~  ~~~~~~~
+//                      ^               ^
+//                      |               Assignation de la variable interne (ou champs) `x` du type
+//                                      `MyStructType`
+//                      Nom entres parenthèses pour expliciter le type qu'on veut utiliser
 
 // On peut alors assigner les champs individuelement :
 variable.x = 67;

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../style.css" type="text/css"/>
+    <link rel="stylesheet" href="../../external/prism.css"/>
+    <!-- <link rel="icon" href="icons/supsy.png"> -->
+    <title>supsy.dev - Blog - Making a simple Tetris game in the terminal</title>
+    <!-- <FONT> -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,293;1,293&display=swap" rel="stylesheet">
+    <!-- </FONT> -->
+    <base href="">
+</head>
+<body>
+    <main>
+        <header>
+            <p><a href="../../index.html">SupSy<span class="text-accent">.dev</span></a></p>
+            <p class="no-select">|</p>
+            <p><a href="../../blog.html">Blog</a></p>
+            <p class="no-select">|</p>
+            <p><a href="../../projects.html">Projects</a></p>
+        </header>
+        <section>
+            <h1><span class="anchor" id="Making"></span>Making a simple Tetris game in the terminal <a class="text-dim" href="#Making">#</a></h1>
+            <p>
+                When trying to learn how to code complex projects, it can be hard going from the simple <code class="inline">farenheit.c</code> example to a fully GPU rendered game. As so, and as I have done myself, I think the best intermediate project to attempt is a terminal-rendered game.
+            </p>
+            <p>
+                In this blog, I will build a simple terminal-rendered <b><i>Tetris</i></b> using ASCII characters and terminal escape sequences (for colors and such). This project will be built from the ground up (no dependencies on libraries not preinstalled on basically every machine) to be as accessible as possible. You can find the finished game in this <a class="text-accent underline" href="https://github.com/SupSyDeMarciou/tetris">GitHub repository</a>.
+            </p>
+            <p>
+                The main objective is to have fun: this is not a tutorial on efficient TUI application design, general software development or game design. My goal is to make this project as well documented as possible to help new C programmers have a better grasp of how to actually achieve such a project.
+            </p>
+            <h2><span class="anchor" id="Summary"></span>Summary <a class="text-dim" href="#Summary">#</a></h2>
+            <ol>
+                <li>
+                    <p>
+                        A common base for terminal-rendered applications<br/>
+                        1.1 How to draw using a terminal<br/>
+                        1.2 How to query user inputs<br/>
+                        1.3 Architecture of the project<br/>
+                        
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Practical example: The game of Tetris<br/>
+                        2.1 The core gameplay loop<br/>
+                        2.2 How to manage the pieces<br/>
+                        2.3 Creating a simple menu<br/>
+                        
+                    </p>
+                </li>
+            </ol>
+            <p>
+                <img src="terminal_view.png" alt="Finished Tetris game in the terminal"/>
+            </p>
+        </section>
+        <section>
+            <h1><span class="anchor" id="1"></span>1. A common base for terminal-rendered applications <a class="text-dim" href="#1">#</a></h1>
+            <h2><span class="anchor" id="1.1"></span>1.1 How to draw using a terminal <a class="text-dim" href="#1.1">#</a></h2>
+            <p>
+                The main idea behind drawing in the terminal is the same as when drawing <i>ASCII-Art</i>: we use the characters as lines and/or values in a grid (unlike a grid of <i>pixels</i>) to build up larger shapes.
+            </p>
+            <pre class="code-box"><code class="language-">                ^     ^
+               / \___/ \
+            __/  _   _  \__
+            ===    ^    ===  ,--,
+               '--   --'    /    \
+               /   V   \    |   _/
+              |  | | |  |   /
+             (,_(,,|,,)_,)-"
+
+Cat in ASCII-ART (only for illustrative purposes)</code></pre>
+            <p>
+                The large majority of terminals display text in a <i>monospace</i> font (meaning that each character is the same width, just like in the font I use for this website). Therefore, we can think of the terminal window as a <i>grid</i> of characters, each occupying a rectangle of roughly 2:1 proportions. Thanks to this consistency, we can <i>draw</i> shapes anywhere in the terminal window without worrying about distorsions due to varying character widths.
+            </p>
+            <p>
+                We can index the different characters based on which column and row they occupy, just like a pixel on a screen. If we imagine printing an image row by row in the terminal, then a <i>row</i> would be a <code class="inline">'\n'</code> terminated line (if we assume the terminal window is wide enough) and a <i>column</i> would be the character's position within this line :
+            </p>
+            <pre class="code-box"><code class="language-c">printf(
+    ".----------.\n" //
+    "| JUST     |\n" //
+    "|     A    |\n" // In C, string litterals are automaticaly concatenated if nothing separates
+    "|      BOX |\n" // them. Therefore, these five lines form a single string litteral
+    "'----------'\n" //
+);
+// Expected:
+//              1
+//    0 2 4 6 8 0
+// 0  .----------.
+// 1  | JUST     |
+// 2  |     A    |
+// 3  |      BOX |
+// 4  '----------'
+//
+// Character 'A' is a position (6;2), so on position 6 of line 2</code></pre>
+            <p>
+                We have a random box, nice! However, if we want to draw anything else now it will have to be bellow this box as we can only print entire lines from top to bottom (less nice), so we will have to be thoughtfull of what we need to print and where we need it, so that we may sequence the print commands accordingly. Alternatively, we could store complete references to the lines to display within an editable buffer so that the order in which edits are made doesn't affect the result. In the game we are making, we will be using a bit of both :
+            </p>
+            <pre class="code-box"><code class="language-c">// This setup achieves the same result as the preview example. However, separating the lines like
+// this allows us to index in which line we are (which may be useful when indexing an array for
+// example).
+for (int l = 0; l &lt 5; l++)
+{
+    switch (l)
+    {
+        case 0: printf(".----------."); break;
+        case 1: printf("| THE      |"); break;
+        case 2: printf("|   FIRST  |"); break;
+        case 3: printf("|      BOX |"); break;
+        case 4: printf("'----------'"); break;
+    }
+
+    printf("    "); // Four spaces
+
+    switch (l)
+    {
+        case 0: printf(".----------."); break;
+        case 1: printf("| THE      |"); break;
+        case 2: printf("|  SECOND  |"); break;
+        case 3: printf("|      BOX |"); break;
+        case 4: printf("'----------'"); break;
+    }
+
+    printf("\n");
+}
+
+// Expected:
+//              1 1 1 1 1 2 2 2 2
+//    0 2 4 6 8 0 2 4 6 8 0 2 4 6
+// 0  .----------.    .----------.
+// 1  | THE      |    | THE      |
+// 2  |   FIRST  |    |  SECOND  |
+// 3  |      BOX |    |      BOX |
+// 4  '----------'    '----------'</code></pre>
+            <p>
+                Thinking about printing in this way grants us much better flexibility in how to arrange our rendering logic.
+            </p>
+            <p>
+                Now that we can draw what we want, we need a way to clear the terminal or move the <i>cursor</i> (the position within the terminal window from which we print) back to the top of the terminal window again in order to draw the next <i>frame</i> of our application. To achieve this and much more, we will use <b><i><a class="text-accent underline" href="https://en.wikipedia.org/wiki/ANSI_escape_code">ANSI Escape Sequences</a></i></b> which are a set of commands one can use to manipulate the terminal's appearence and behaviour.
+            </p>
+            <p>
+                The commands we will use take the form <code class="inline">"\033[..."</code> and are to be placed within the text printing to the terminal. Indeed, <code class="inline">\033</code> is an <i>octal number</i> which equals 27 in decimal. This number is called the <i>escape code</i> and is pretty much standard throughout terminals as the introduction to a command (it is also referenced as <code class="inline">\e</code> in C). In our case, all commands will also have an opening square bracket <code class="inline">[</code> as the second byte because we only manipulate the terminal appearence (these are called <i>Control Sequence Introducer commands</i>).
+            </p>
+            <p>
+                Specificaly, we will need:
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        <code class="inline">"\033[</code><i><code class="inline">n</code></i><code class="inline">J"</code> to erase the screen, with <i><code class="inline">n</code></i> either 0 (erase from cursor position to <i>end</i> of screen), 1 (erase from cursor position to <i>top</i> or screen) or 2 (erase <i>entire</i> screen).
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">"\033[</code><i><code class="inline">n</code></i><code class="inline">;</code><i><code class="inline">m</code></i><code class="inline">H"</code> to move the cursor to row <code class="inline">n</code> and column <code class="inline">m</code>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">"\033[</code><i><code class="inline">n</code></i><code class="inline">m"</code> to change the color (and other things) for the next print operations, with <code class="inline">n</code> an integer (the <i><a class="text-accent underline" href="https://en.wikipedia.org/wiki/ANSI_escape_code">wikipedia page</a></i> references all the possible values).
+                    </p>
+                </li>
+            </ul>
+            <p>
+                Using this, we can now make our boxes two different colors and bounce up and down :
+            </p>
+            <pre class="code-box"><code class="language-c">#include &ltstdio.h>
+#include &ltunistd.h>
+#include &ltmath.h>
+
+int main()
+{
+    // This is used for the box boucing, so that we have a time reference
+    for (int frame_count = 0; ; ++frame_count)
+    {
+        const int offset1 = 2.5 + 2.5 * sin(frame_count * 0.1);
+        const int offset2 = 2.5 - 2.5 * sin(frame_count * 0.1);
+
+        printf(
+            "\033[2J" // Clear entire screen
+            "\033[1H" // Reset cursor position (top-left)
+        );
+        for (int l = 0; l &lt 10; l++) // We will work with 10 lines for the screen
+        {
+            
+            printf("\033[31m"); // Set color to "red"
+            switch (l - offset1) // Check current line
+            {
+                case 0:  printf(".----------."); break;
+                case 1:  printf("| THE      |"); break;
+                case 2:  printf("|   FIRST  |"); break;
+                case 3:  printf("|      BOX |"); break;
+                case 4:  printf("'----------'"); break;
+                default: printf("            "); break; // If we're not drawing a box, then we draw
+                          // blank characters to keep the spacing intact for the next box
+            }
+            printf("\033[0m"); // Reset color (not necessary, but good practice when you don't know
+                               // what comes next).
+            
+            printf("    "); // Four spaces
+            
+            printf("\033[32m"); // Set color to "green"
+            switch (l - offset2) // Same as the first box
+            {
+                case 0:  printf(".----------."); break;
+                case 1:  printf("| THE      |"); break;
+                case 2:  printf("|  SECOND  |"); break;
+                case 3:  printf("|      BOX |"); break;
+                case 4:  printf("'----------'"); break;
+                default: printf("            "); break;
+            }
+            printf("\033[0m");
+    
+            printf("\n"); // Finish the row by passing a newline character
+        }
+
+        usleep(1000*1000/30); // Just to slow down the execution (we set a target of 30 frames per second, or 30 FPS)
+    }
+}</code></pre>
+            <p>
+                This programs outputs the following (just imagine the boxes moving up and down, I don't know how to embed video yet):
+            </p>
+            <p>
+                <img src="example_boxes.png" alt="Output of the previous example on the terminal"/>
+            </p>
+            <hgroup>
+                <p>
+                    <b>(i)</b> Technically, we could also use <i>ANSI escape sequences</i> to move the cursor to a specific coordinate using <code class="inline">"\033[n;mH"</code> as a replacement to printing line by line, but I prefer to limit my uses of escape sequences as, depending on the terminal <i>(looking at you, Windows terminals)</i>, printing may be slow and reducing the number of times we have to jump around and redraw can become crucial. This constraint also applies to changing color.
+                </p>
+            </hgroup>
+            <h2><span class="anchor" id="1.2"></span>1.2 How to query user inputs <a class="text-dim" href="#1.2">#</a></h2>
+            <p>
+                Now let's say we wanted to change the color of the second box based on user input, how do we do that ?<br/>
+                This can be achieved in multiple ways, but the simplest is to listen to the <i>standard input stream (</i><i><code class="inline">stdin</code></i><i>)</i> and wait for the user to press a key:
+            </p>
+            <pre class="code-box"><code class="language-c">int c = getc(stdin);
+printf("Got %c (%d)\n", c, c);</code></pre>
+            <p>
+                Sadly, this will not work as <code class="inline">stdin</code> is a <code class="inline">FILE *</code> so it is <i>buffered</i>, which means that a newline character has to be entered in order for <code class="inline">getc</code> to return (so everytime the user writes something, they would have to also press <i>enter</i> for their input to be taken into account).
+            </p>
+            <p>
+                What we want is a function that exactly retrieves a character from the standard input as soon as it is written. Such a function exists on <i>Windows</i> in the library <code class="inline">&ltconio.h></code>, but on <i>Linux</i> we have to write it ourselves... So I didn't write it myself and found this on <i>StackOverflow</i>:
+            </p>
+            <pre class="code-box"><code class="language-c">#include &lttermios.h>
+#include &ltunistd.h>
+#include &ltstdio.h>
+
+int getch(void) {
+    // credits: https://stackoverflow.com/questions/3276546/how-to-implement-getch-function-of-c-in-linux
+    struct termios oldattr, newattr;
+    tcgetattr( STDIN_FILENO, &ampoldattr );
+    newattr = oldattr;
+    newattr.c_lflag &amp= ~( ICANON | ECHO );
+    tcsetattr( STDIN_FILENO, TCSANOW, &ampnewattr );
+    int ch = getchar();
+    tcsetattr( STDIN_FILENO, TCSANOW, &ampoldattr );
+    return ch;
+}</code></pre>
+            <p>
+                What it does is change the terminal I/O settings so that the standard input is no longer buffered for the duration of this function (this is why <code class="inline">oldattr</code> is queried, to put the terminal back to its initial state before the function is exited).
+            </p>
+            <p>
+                With this, we can use <i>macro magic</i> (basic <code class="inline">#if .. #else ... #endif</code>) to make our code compilable on both windows and linux:
+            </p>
+            <pre class="code-box"><code class="language-c">#include &ltstdio.h>
+
+#ifdef _WIN32
+#   include &ltconio.h>
+#   define getch _getch
+#else
+#   include &lttermios.h>
+#   include &ltunistd.h>
+    int getch(void) {
+        // credits: https://stackoverflow.com/questions/3276546/how-to-implement-getch-function-of-c-in-linux
+        struct termios oldattr, newattr;
+        tcgetattr( STDIN_FILENO, &ampoldattr );
+        newattr = oldattr;
+        newattr.c_lflag &amp= ~( ICANON | ECHO );
+        tcsetattr( STDIN_FILENO, TCSANOW, &ampnewattr );
+        int ch = getchar();
+        tcsetattr( STDIN_FILENO, TCSANOW, &ampoldattr );
+        return ch;
+    }
+#endif</code></pre>
+            <p>
+                Now that we can retrieve inputs as they come, we can start to analyse what they look like. For characters from <code class="inline">a</code> to <code class="inline">z</code> and from <code class="inline">A</code> to <code class="inline">Z</code> (as well as some punctuation and whitespaces like <code class="inline">\n</code>), the <code class="inline">getch</code> function returns exactly their <i>ASCII code</i>. For more complex inputs like <code class="inline">left_arrow</code>, an <i>escape sequence</i> can occur. For the arrows, these sequences are:
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        <code class="inline">"\033[A"</code> for <code class="inline">up_arrow</code>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">"\033[B"</code> for <code class="inline">down_arrow</code>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">"\033[C"</code> for <code class="inline">right_arrow</code>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">"\033[D"</code> for <code class="inline">left_arrow</code>.
+                    </p>
+                </li>
+            </ul>
+            <hgroup>
+                <p>
+                    <b>(i)</b> These are also the sequences for moving the <i>cursor</i> (where the text is printed in the terminal window) in these directions. This shows how the escape sequences can be used to dialogue with the terminal (for example, we can ask for the cursor position with <code class="inline">"\033[6n"</code> and the terminal will respond with <code class="inline">"\033[</code><i><code class="inline">n</code></i><code class="inline">;</code><i><code class="inline">m</code></i><code class="inline">H"</code>, the sequence for moving the cursor to row <code class="inline">n</code> and column <code class="inline">m</code>).
+                </p>
+            </hgroup>
+            <p>
+                These are composed of multiple characters so we have to call <code class="inline">getch</code> three times to retrieve the complete input, which can make our code messy when we will start to link inputs to game logic. To account for that, I decided to create an <i>enum</i> with the non-alphanumerical inputs and a function to deal with the <code class="inline">getch</code> calls for me:
+            </p>
+            <pre class="code-box"><code class="language-c">/// @brief Some non-alphanumerical inputs we might expect
+typedef enum InputKey {
+#ifdef _WIN32
+    INPUT_ENTER       = '\r',
+    INPUT_BACKSPACE   = '\b',
+#else
+    INPUT_ENTER       = '\n',
+    INPUT_BACKSPACE   = 127,
+#endif
+    INPUT_A_CTRL      = 1,
+    INPUT_C_CTRL      = 3,
+    INPUT_V_CTRL      = 22,
+    INPUT_X_CTRL      = 24,
+    INPUT_Z_CTRL      = 26,
+    
+    ESCAPE_CODE       = 27,
+    __INPUT_NON_ASCII = 256,
+    INPUT_UP,
+    INPUT_DOWN,
+    INPUT_RIGHT,
+    INPUT_LEFT,
+} input_key;
+
+/// @brief Get the last pressed key
+/// @return The pressed input_key
+int inputGet() {
+    const int base = getch();
+    if (base != ESCAPE_CODE) return base;
+
+    const int expect_sqr_bracket = getch();
+    if (expect_sqr_bracket != '[') return -1;
+
+    const int c = getch();
+    switch (c) {
+        case 'A': return INPUT_UP;
+        case 'B': return INPUT_DOWN;
+        case 'C': return INPUT_RIGHT;
+        case 'D': return INPUT_LEFT;
+        default:  return -1;
+    }
+}</code></pre>
+            <p>
+                This function either returns an ASCII character or value from my aforementionned enum.
+            </p>
+            <hgroup>
+                <h3>/!\ WORK IN PROGRESS /!\</h3>
+                <p>
+                     This page will continue to be worked on
+                </p>
+            </hgroup>
+        </section>
+        <footer><p>Vlad MUNTEANU 2026 - All rights reserved.</p></footer>
+        <script src="../../external/prism.js"></script>
+    </main>
+</body>
+</html>

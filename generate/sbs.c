@@ -816,25 +816,25 @@ void generate_project(const char *name, md_tree md)
 
 int main(int argc, char **argv)
 {
-    SBS_rebuild(argc, argv, "-I../../SupSyLibraries/include/");
+    SBS_rebuild(argc, argv, "-I"ROOT"../SupSyLibraries/include/");
 
     if (argc > 1 && strcmp(argv[1], "blog") == 0)
     {
-        const char *blog_name = argc > 2 ? argv[2] : NULL;
-        if (!blog_name) SL_terminate(-1, "Expected blog name!");
+        const char *name = argc > 2 ? argv[2] : NULL;
+        if (!name) SL_terminate(-1, "Expected blog name!");
     
-        md_tree md = parse_md(strf(ROOT"blogs/%s/%s.md", blog_name, blog_name));
-        generate_blog(blog_name, md);
-        update_list(ROOT"blog.list", list_entry_(blog_name, time(NULL), md.is_french, md.title, md.description));
+        md_tree md = parse_md(strf(ROOT"blogs/%s/%s.md", name, name));
+        generate_blog(name, md);
+        if (argc > 3 && strcmp(argv[3], "publish") == 0) update_list(ROOT"blog.list", list_entry_(name, time(NULL), md.is_french, md.title, md.description));
     }
     else if (argc > 1 && strcmp(argv[1], "project") == 0)
     {
-        const char *blog_name = argc > 2 ? argv[2] : NULL;
-        if (!blog_name) SL_terminate(-1, "Expected project name!");
+        const char *name = argc > 2 ? argv[2] : NULL;
+        if (!name) SL_terminate(-1, "Expected project name!");
     
-        md_tree md = parse_md(strf(ROOT"projects/%s/%s.md", blog_name, blog_name));
-        generate_project(blog_name, md);
-        update_list(ROOT"project.list", list_entry_(blog_name, time(NULL), md.is_french, md.title, md.description));
+        md_tree md = parse_md(strf(ROOT"projects/%s/%s.md", name, name));
+        generate_project(name, md);
+        if (argc > 3 && strcmp(argv[3], "publish") == 0) update_list(ROOT"project.list", list_entry_(name, time(NULL), md.is_french, md.title, md.description));
     }
     else 
     {
