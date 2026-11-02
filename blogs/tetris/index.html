@@ -41,16 +41,21 @@
                         A common base for terminal-rendered applications<br/>
                         1.1 How to draw using a terminal<br/>
                         1.2 How to query user inputs<br/>
-                        1.3 Architecture of the project<br/>
+                        
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Architecture of the project<br/>
                         
                     </p>
                 </li>
                 <li>
                     <p>
                         Practical example: The game of Tetris<br/>
-                        2.1 The core gameplay loop<br/>
-                        2.2 How to manage the pieces<br/>
-                        2.3 Creating a simple menu<br/>
+                        3.1 The core gameplay loop<br/>
+                        3.2 How to manage the pieces<br/>
+                        3.3 Creating a simple menu<br/>
                         
                     </p>
                 </li>
@@ -99,7 +104,7 @@ Cat in ASCII-ART (only for illustrative purposes)</code></pre>
 //
 // Character 'A' is a position (6;2), so on position 6 of line 2</code></pre>
             <p>
-                We have a random box, nice! However, if we want to draw anything else now it will have to be bellow this box as we can only print entire lines from top to bottom (less nice), so we will have to be thoughtfull of what we need to print and where we need it, so that we may sequence the print commands accordingly. Alternatively, we could store complete references to the lines to display within an editable buffer so that the order in which edits are made doesn't affect the result. In the game we are making, we will be using a bit of both :
+                We have a random box, nice! However, if we want to draw anything else now it will have to be bellow this box as we can only print entire lines from top to bottom. We will have to be thoughtfull of what we need to print and where we need it so that we may sequence the print commands accordingly and ensure everything appears in its right place. Alternatively, we could store complete references to the lines to display within an editable buffer so that the order in which edits are made doesn't affect the result. In the game we are making, we will be using a bit of both. Here is an example displaying two boxes:
             </p>
             <pre class="code-box"><code class="language-c">// This setup achieves the same result as the preview example. However, separating the lines like
 // this allows us to index in which line we are (which may be useful when indexing an array for
@@ -144,7 +149,7 @@ for (int l = 0; l &lt 5; l++)
                 Now that we can draw what we want, we need a way to clear the terminal or move the <i>cursor</i> (the position within the terminal window from which we print) back to the top of the terminal window again in order to draw the next <i>frame</i> of our application. To achieve this and much more, we will use <b><i><a class="text-accent underline" href="https://en.wikipedia.org/wiki/ANSI_escape_code">ANSI Escape Sequences</a></i></b> which are a set of commands one can use to manipulate the terminal's appearence and behaviour.
             </p>
             <p>
-                The commands we will use take the form <code class="inline">"\033[..."</code> and are to be placed within the text printing to the terminal. Indeed, <code class="inline">\033</code> is an <i>octal number</i> which equals 27 in decimal. This number is called the <i>escape code</i> and is pretty much standard throughout terminals as the introduction to a command (it is also referenced as <code class="inline">\e</code> in C). In our case, all commands will also have an opening square bracket <code class="inline">[</code> as the second byte because we only manipulate the terminal appearence (these are called <i>Control Sequence Introducer commands</i>).
+                The commands we will use take the form <code class="inline">"\033[..."</code> and are to be placed within the text printing to the terminal. Indeed, <code class="inline">\033</code> is an <i>octal number</i> (written in base 8) which equals to <code class="inline">27</code> in decimal. This number is called the <i>escape code</i> and is pretty much standard throughout terminals as the introduction to a command (it is also defined as the <i>escaped character</i> <code class="inline">'\e'</code> in C). In our case, all commands will also have an opening square bracket <code class="inline">[</code> as the second byte because we only manipulate the terminal appearence (these are called <i>Control Sequence Introducer commands</i>).
             </p>
             <p>
                 Specificaly, we will need:
@@ -167,7 +172,7 @@ for (int l = 0; l &lt 5; l++)
                 </li>
             </ul>
             <p>
-                Using this, we can now make our boxes two different colors and bounce up and down :
+                Using this, we can now make our boxes bounce up and down in two different colors :
             </p>
             <pre class="code-box"><code class="language-c">#include &ltstdio.h>
 #include &ltunistd.h>
@@ -230,7 +235,7 @@ int main()
             </p>
             <hgroup>
                 <p>
-                    <b>(i)</b> Technically, we could also use <i>ANSI escape sequences</i> to move the cursor to a specific coordinate using <code class="inline">"\033[n;mH"</code> as a replacement to printing line by line, but I prefer to limit my uses of escape sequences as, depending on the terminal <i>(looking at you, Windows terminals)</i>, printing may be slow and reducing the number of times we have to jump around and redraw can become crucial. This constraint also applies to changing color.
+                    <b>(i)</b> Technically, we could also use <i>ANSI escape sequences</i> to move the cursor to a specific coordinate using <code class="inline">"\033[n;mH"</code> as a replacement to printing line by line, but I prefer to limit my uses of escape sequences as, depending on the terminal <i>(looking at you, Windows terminals)</i>, printing may be slow and reducing the number of times we have to jump around and redraw can become crucial. This constraint also applies to changing color, and in a sense extends to graphics rendering in general as the <i>overdraw problem</i>.
                 </p>
             </hgroup>
             <h2><span class="anchor" id="1.2"></span>1.2 How to query user inputs <a class="text-dim" href="#1.2">#</a></h2>
@@ -241,7 +246,7 @@ int main()
             <pre class="code-box"><code class="language-c">int c = getc(stdin);
 printf("Got %c (%d)\n", c, c);</code></pre>
             <p>
-                Sadly, this will not work as <code class="inline">stdin</code> is a <code class="inline">FILE *</code> so it is <i>buffered</i>, which means that a newline character has to be entered in order for <code class="inline">getc</code> to return (so everytime the user writes something, they would have to also press <i>enter</i> for their input to be taken into account).
+                It is sadly not that simple as <code class="inline">stdin</code> is <i>buffered</i> by default, which means that a newline character has to be entered in order for <code class="inline">getc</code> to return (so everytime the user writes something, they would have to also press <i>enter</i> for their input to be taken into account).
             </p>
             <p>
                 What we want is a function that exactly retrieves a character from the standard input as soon as it is written. Such a function exists on <i>Windows</i> in the library <code class="inline">&ltconio.h></code>, but on <i>Linux</i> we have to write it ourselves... So I didn't write it myself and found this on <i>StackOverflow</i>:
@@ -255,14 +260,20 @@ int getch(void) {
     struct termios oldattr, newattr;
     tcgetattr( STDIN_FILENO, &ampoldattr );
     newattr = oldattr;
-    newattr.c_lflag &amp= ~( ICANON | ECHO );
+    newattr.c_lflag &amp= ~( ICANON | ECHO | ISIG ); // Here, we flip these flags, so we disale them
+    //                    ^        ^      ^
+    //                    |        |      Killing with ^C and ^Z
+    //                    |        Printing inputs to stdout
+    //                    Canonical mode (buffered, waits for enter to be pressed)
     tcsetattr( STDIN_FILENO, TCSANOW, &ampnewattr );
-    int ch = getchar();
-    tcsetattr( STDIN_FILENO, TCSANOW, &ampoldattr );
-    return ch;
+    int c = getchar(); // Like `getc(stdin)` but more adequate as we don't consider the standard
+                       // input as a file in this case
+    tcsetattr( STDIN_FILENO, TCSANOW, &ampoldattr ); // Set back the old attributes so the terminal is
+                                                  // unchanged after this function call
+    return c;
 }</code></pre>
             <p>
-                What it does is change the terminal I/O settings so that the standard input is no longer buffered for the duration of this function (this is why <code class="inline">oldattr</code> is queried, to put the terminal back to its initial state before the function is exited).
+                This works by changing the terminal I/O settings so that the standard input is no longer buffered for the duration of this function (this is why <code class="inline">oldattr</code> is queried, to put the terminal back to its initial state before the function is exited).
             </p>
             <p>
                 With this, we can use <i>macro magic</i> (basic <code class="inline">#if .. #else ... #endif</code>) to make our code compilable on both windows and linux:
@@ -282,13 +293,13 @@ int getch(void) {
         newattr = oldattr;
         newattr.c_lflag &amp= ~( ICANON | ECHO );
         tcsetattr( STDIN_FILENO, TCSANOW, &ampnewattr );
-        int ch = getchar();
+        int c = getchar();
         tcsetattr( STDIN_FILENO, TCSANOW, &ampoldattr );
-        return ch;
+        return c;
     }
 #endif</code></pre>
             <p>
-                Now that we can retrieve inputs as they come, we can start to analyse what they look like. For characters from <code class="inline">a</code> to <code class="inline">z</code> and from <code class="inline">A</code> to <code class="inline">Z</code> (as well as some punctuation and whitespaces like <code class="inline">\n</code>), the <code class="inline">getch</code> function returns exactly their <i>ASCII code</i>. For more complex inputs like <code class="inline">left_arrow</code>, an <i>escape sequence</i> can occur. For the arrows, these sequences are:
+                Now that we can retrieve inputs as they come, we can start to analyse what they look like. For characters from <code class="inline">'a'</code> to <code class="inline">'z'</code> and from <code class="inline">'A'</code> to <code class="inline">'Z'</code> (as well as some punctuation and whitespaces like <code class="inline">'\n'</code>), the <code class="inline">getch</code> function returns exactly their <i>ASCII code</i>. For more complex inputs like <code class="inline">left_arrow</code>, an <i>escape sequence</i> can occur. For the arrows, these sequences are:
             </p>
             <ul>
                 <li>
@@ -314,11 +325,11 @@ int getch(void) {
             </ul>
             <hgroup>
                 <p>
-                    <b>(i)</b> These are also the sequences for moving the <i>cursor</i> (where the text is printed in the terminal window) in these directions. This shows how the escape sequences can be used to dialogue with the terminal (for example, we can ask for the cursor position with <code class="inline">"\033[6n"</code> and the terminal will respond with <code class="inline">"\033[</code><i><code class="inline">n</code></i><code class="inline">;</code><i><code class="inline">m</code></i><code class="inline">H"</code>, the sequence for moving the cursor to row <code class="inline">n</code> and column <code class="inline">m</code>).
+                    <b>(i)</b> Note that these are also the sequences for moving the <i>cursor</i> (position from which the text is printed in the terminal window) in these directions. This shows how the escape sequences can be used to <i>dialogue</i> with the terminal (for example, we can ask for the cursor position with <code class="inline">"\033[6n"</code> and the terminal will respond in the <i>standard input</i> with <code class="inline">"\033[</code><i><code class="inline">n</code></i><code class="inline">;</code><i><code class="inline">m</code></i><code class="inline">H"</code>, that we know to be the sequence for moving the cursor to row <code class="inline">n</code> and column <code class="inline">m</code>).
                 </p>
             </hgroup>
             <p>
-                These are composed of multiple characters so we have to call <code class="inline">getch</code> three times to retrieve the complete input, which can make our code messy when we will start to link inputs to game logic. To account for that, I decided to create an <i>enum</i> with the non-alphanumerical inputs and a function to deal with the <code class="inline">getch</code> calls for me:
+                These inputs are composed of multiple characters so we have to call <code class="inline">getch</code> three times to retrieve the complete input, which can make our code messy when we will start to link inputs to game logic. To account for that, I decided to create an <i>enum</i> with the non-alphanumerical inputs and a function to deal with the <code class="inline">getch</code> calls for me:
             </p>
             <pre class="code-box"><code class="language-c">/// @brief Some non-alphanumerical inputs we might expect
 typedef enum InputKey {
@@ -336,11 +347,12 @@ typedef enum InputKey {
     INPUT_Z_CTRL      = 26,
     
     ESCAPE_CODE       = 27,
-    __INPUT_NON_ASCII = 256,
-    INPUT_UP,
-    INPUT_DOWN,
-    INPUT_RIGHT,
-    INPUT_LEFT,
+    __INPUT_NON_ASCII = 256, // This ensure no collisions with existing ASCII characters codes, as
+                             // as the next entries will count up from 256:
+    INPUT_UP,    // 257
+    INPUT_DOWN,  // 258
+    INPUT_RIGHT, // 259
+    INPUT_LEFT,  // 260
 } input_key;
 
 /// @brief Get the last pressed key
@@ -350,7 +362,7 @@ int inputGet() {
     if (base != ESCAPE_CODE) return base;
 
     const int expect_sqr_bracket = getch();
-    if (expect_sqr_bracket != '[') return -1;
+    if (expect_sqr_bracket != '[') return 0;
 
     const int c = getch();
     switch (c) {
@@ -358,12 +370,138 @@ int inputGet() {
         case 'B': return INPUT_DOWN;
         case 'C': return INPUT_RIGHT;
         case 'D': return INPUT_LEFT;
-        default:  return -1;
+        default:  return 0;
     }
 }</code></pre>
             <p>
-                This function either returns an ASCII character or value from my aforementionned enum.
+                This function either returns an ASCII character or value from the aforementionned enum if it is recognized as such. In any other case, it returns <code class="inline">0</code> (so that it may be interpreted as <code class="inline">false</code>). Now that we have a single function to call, we can query the user input in a loop like so :
             </p>
+            <pre class="code-box"><code class="language-c">while (1)
+{
+    int input = inputGet();
+    switch(input)
+    {
+        case 'a': {
+            // Action to realize for pressing 'a' without CTRL or MAJ pressed too
+        } break;
+        ...
+        case INPUT_UP: {
+            // Action to realize for pressing up arrow without CTRL or MAJ pressed too
+        } break;
+        ...
+        default: {
+            fprintf(stderr, "UNKNOWN INPUT %d\n", input);
+        } break;
+    }
+}</code></pre>
+            <hgroup>
+                <p>
+                    <b>(i)</b> The <code class="inline">getch</code> function (on both Windows and Linux) is still <i>blocking</i> in the sense that it waits for the user to press a key before returning a value (aka. the calling thread is put to sleep and woken up by the user input). This means that we can't do <i>inputs pulling</i> (waiting on user inputs) in the same thread as the rest of the application (in our case, the game update and the rendering) with this method. An alternative would be to make the standard input <i>non-blocking</i> using <code class="inline">fcntl(STDIN_FILENO, </code><code class="inline">F_SETFL, </code><code class="inline">fcntl(STDIN_FILENO, </code><code class="inline">F_GETFL) | O_NONBLOCK)</code> on Linux or use <code class="inline">getch_nolock</code> on Windows and just check for <i>non-zero values</i>.
+                </p>
+            </hgroup>
+            <p>
+                In this project we will accomodate for the <i>blocking</i> nature of <code class="inline">getch</code> by calling it in a separate <i>thread</i> and store the pressed inputs using a global variable:
+            </p>
+            <pre class="code-box"><code class="language-c">struct inputs
+{
+    union { // Using a union allows us to iterate over all inputs in a loop in `inputs_update`
+        struct {
+            bool key_a:  // The simple `a` key without CTRL or MAJ
+            bool key_up; // The simple up arrow key without CTRL or MAJ
+        };
+        bool inputs[2];
+    };
+    pthread_mutex_t mutex; // Because the data is shared between two threads, we need to resolve
+                           // collisions when writting by using a mutex
+} INPUTS = { // We use a global variable here as there will only ever be one source for user inputs
+             // and we never manipulate this variable directly (we always use functions which use a
+             // mutex)
+    .mutex = PTHREAD_MUTEX_INITIALIZER
+};
+
+// Shorthand for pthread_mutex_lock(&ampINPUTS.mutex) and pthread_mutex_unlock(&ampINPUTS.mutex)
+void inputs_mutex(bool lock)
+{
+    (lock ? pthread_mutex_lock : pthread_mutex_unlock)(&ampINPUTS.mutex);
+}
+// Function executed in another thread to get user inputs, passed to `pthread_create`
+void *inputs_thread_func(void *_)
+{
+    while (1)
+    {
+        int key = inputGet(); // The infamous blocking function
+
+        inputs_mutex(true);
+        switch (key) {
+            case 'a':      INPUTS.key_a  = true; break;
+            case INPUT_UP: INPUTS.key_up = true; break;
+            default:                             break;
+        }
+        inputs_mutex(false);
+    }
+}
+// Function to be called once per frame which resets the inputs to not being pressed
+void update_inputs()
+{
+    inputs_mutex(true);
+    for (int i = 0; i &lt 2; ++i) INPUTS.inputs[i] = false;
+    inputs_mutex(false);
+}
+
+int main()
+{
+    // Initialization code ...
+    pthread_t inputs_thread;
+    pthread_create(&ampinputs_thread, NULL, inputs_thread_func, NULL);
+
+    while (1)
+    {
+        // Logic for updating the game, rendering...
+        
+        update_inputs();   // Last thing in the loop, we reset the input so that it may be updated
+                           // again during the sleep 
+        sleep(1.0 / 30.0); // Sleep to set target FPS to 30 (let's assume `sleep` takes in a float
+                           // for now, we will redefine it as so later anyways)
+    }
+}</code></pre>
+        </section>
+        <section>
+            <h1><span class="anchor" id="2"></span>2. Architecture of the project <a class="text-dim" href="#2">#</a></h1>
+            <p>
+                Now that we have a way to display information and a way to acquire user input, we're all set... Or are we ? <i>Queue in Moon Men by Jake Chudnow...</i> Yeah we basicaly are, but let's organize everything so that we know have our final project's source code will look like.
+            </p>
+            <p>
+                We are dealing with three main sections:
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        <b>Game logic</b>: where the state of the application is changed (in our case, where the game state is updated).
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <b>Rendering</b>: where the state of the application is converted to be displayed (in our case, the game of tetris in the terminal window)
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <b>Inputs processing</b>: where the user inputs are captured to be used by the application.
+                    </p>
+                </li>
+            </ul>
+            <hgroup>
+                <h3>/!\ WORK IN PROGRESS /!\</h3>
+                <p>
+                     This section will continue to be worked on
+                </p>
+            </hgroup>
+        </section>
+        <section>
+            <h1><span class="anchor" id="3"></span>3. Practical example: The game of Tetris <a class="text-dim" href="#3">#</a></h1>
+            <h2><span class="anchor" id="3.1"></span>3.1 The core gameplay loop <a class="text-dim" href="#3.1">#</a></h2>
+            <h2><span class="anchor" id="3.2"></span>3.2 How to manage the pieces <a class="text-dim" href="#3.2">#</a></h2>
+            <h2><span class="anchor" id="3.3"></span>3.3 Creating a simple menu <a class="text-dim" href="#3.3">#</a></h2>
             <hgroup>
                 <h3>/!\ WORK IN PROGRESS /!\</h3>
                 <p>

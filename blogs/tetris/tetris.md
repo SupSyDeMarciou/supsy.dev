@@ -10,11 +10,11 @@ The main objective is to have fun: this is not a tutorial on efficient TUI appli
 1. A common base for terminal-rendered applications  
     1.1 How to draw using a terminal  
     1.2 How to query user inputs  
-    1.3 Architecture of the project  
-2. Practical example: The game of Tetris  
-    2.1 The core gameplay loop  
-    2.2 How to manage the pieces  
-    2.3 Creating a simple menu  
+2. Architecture of the project  
+3. Practical example: The game of Tetris  
+    3.1 The core gameplay loop  
+    3.2 How to manage the pieces  
+    3.3 Creating a simple menu  
 
 
 ![Finished Tetris game in the terminal](terminal_view.png)
@@ -60,7 +60,7 @@ printf(
 // Character 'A' is a position (6;2), so on position 6 of line 2
 ```
 
-We have a random box, nice! However, if we want to draw anything else now it will have to be bellow this box as we can only print entire lines from top to bottom (less nice), so we will have to be thoughtfull of what we need to print and where we need it, so that we may sequence the print commands accordingly. Alternatively, we could store complete references to the lines to display within an editable buffer so that the order in which edits are made doesn't affect the result. In the game we are making, we will be using a bit of both :
+We have a random box, nice! However, if we want to draw anything else now it will have to be bellow this box as we can only print entire lines from top to bottom. We will have to be thoughtfull of what we need to print and where we need it so that we may sequence the print commands accordingly and ensure everything appears in its right place. Alternatively, we could store complete references to the lines to display within an editable buffer so that the order in which edits are made doesn't affect the result. In the game we are making, we will be using a bit of both. Here is an example displaying two boxes:
 ```C
 // This setup achieves the same result as the preview example. However, separating the lines like
 // this allows us to index in which line we are (which may be useful when indexing an array for
@@ -104,14 +104,14 @@ Thinking about printing in this way grants us much better flexibility in how to 
 
 Now that we can draw what we want, we need a way to clear the terminal or move the *cursor* (the position within the terminal window from which we print) back to the top of the terminal window again in order to draw the next *frame* of our application. To achieve this and much more, we will use ***[ANSI Escape Sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)*** which are a set of commands one can use to manipulate the terminal's appearence and behaviour.
 
-The commands we will use take the form `"\033[..."` and are to be placed within the text printing to the terminal. Indeed, `\033` is an *octal number* which equals 27 in decimal. This number is called the *escape code* and is pretty much standard throughout terminals as the introduction to a command (it is also referenced as `\e` in C). In our case, all commands will also have an opening square bracket `[` as the second byte because we only manipulate the terminal appearence (these are called *Control Sequence Introducer commands*).
+The commands we will use take the form `"\033[..."` and are to be placed within the text printing to the terminal. Indeed, `\033` is an *octal number* (written in base 8) which equals to `27` in decimal. This number is called the *escape code* and is pretty much standard throughout terminals as the introduction to a command (it is also defined as the *escaped character* `'\e'` in C). In our case, all commands will also have an opening square bracket `[` as the second byte because we only manipulate the terminal appearence (these are called *Control Sequence Introducer commands*).
 
 Specificaly, we will need:
 - `"\033[`*`n`*`J"` to erase the screen, with *`n`* either 0 (erase from cursor position to *end* of screen), 1 (erase from cursor position to *top* or screen) or 2 (erase *entire* screen).
 - `"\033[`*`n`*`;`*`m`*`H"` to move the cursor to row `n` and column `m`.
 - `"\033[`*`n`*`m"` to change the color (and other things) for the next print operations, with `n` an integer (the *[wikipedia page](https://en.wikipedia.org/wiki/ANSI_escape_code)* references all the possible values).
 
-Using this, we can now make our boxes two different colors and bounce up and down :
+Using this, we can now make our boxes bounce up and down in two different colors :
 ```C
 #include <stdio.h>
 #include <unistd.h>
@@ -171,7 +171,7 @@ This programs outputs the following (just imagine the boxes moving up and down, 
 
 ![Output of the previous example on the terminal](example_boxes.png)
 
-> **(i)** Technically, we could also use *ANSI escape sequences* to move the cursor to a specific coordinate using `"\033[n;mH"` as a replacement to printing line by line, but I prefer to limit my uses of escape sequences as, depending on the terminal *(looking at you, Windows terminals)*, printing may be slow and reducing the number of times we have to jump around and redraw can become crucial. This constraint also applies to changing color.
+> **(i)** Technically, we could also use *ANSI escape sequences* to move the cursor to a specific coordinate using `"\033[n;mH"` as a replacement to printing line by line, but I prefer to limit my uses of escape sequences as, depending on the terminal *(looking at you, Windows terminals)*, printing may be slow and reducing the number of times we have to jump around and redraw can become crucial. This constraint also applies to changing color, and in a sense extends to graphics rendering in general as the *overdraw problem*.
 
 ## 1.2 How to query user inputs
 
@@ -181,7 +181,7 @@ This can be achieved in multiple ways, but the simplest is to listen to the *sta
 int c = getc(stdin);
 printf("Got %c (%d)\n", c, c);
 ```
-Sadly, this will not work as `stdin` is a `FILE *` so it is *buffered*, which means that a newline character has to be entered in order for `getc` to return (so everytime the user writes something, they would have to also press *enter* for their input to be taken into account).
+It is sadly not that simple as `stdin` is *buffered* by default, which means that a newline character has to be entered in order for `getc` to return (so everytime the user writes something, they would have to also press *enter* for their input to be taken into account).
 
 What we want is a function that exactly retrieves a character from the standard input as soon as it is written. Such a function exists on *Windows* in the library `<conio.h>`, but on *Linux* we have to write it ourselves... So I didn't write it myself and found this on *StackOverflow*:
 ```C
@@ -194,14 +194,20 @@ int getch(void) {
     struct termios oldattr, newattr;
     tcgetattr( STDIN_FILENO, &oldattr );
     newattr = oldattr;
-    newattr.c_lflag &= ~( ICANON | ECHO );
+    newattr.c_lflag &= ~( ICANON | ECHO | ISIG ); // Here, we flip these flags, so we disale them
+    //                    ^        ^      ^
+    //                    |        |      Killing with ^C and ^Z
+    //                    |        Printing inputs to stdout
+    //                    Canonical mode (buffered, waits for enter to be pressed)
     tcsetattr( STDIN_FILENO, TCSANOW, &newattr );
-    int ch = getchar();
-    tcsetattr( STDIN_FILENO, TCSANOW, &oldattr );
-    return ch;
+    int c = getchar(); // Like `getc(stdin)` but more adequate as we don't consider the standard
+                       // input as a file in this case
+    tcsetattr( STDIN_FILENO, TCSANOW, &oldattr ); // Set back the old attributes so the terminal is
+                                                  // unchanged after this function call
+    return c;
 }
 ```
-What it does is change the terminal I/O settings so that the standard input is no longer buffered for the duration of this function (this is why `oldattr` is queried, to put the terminal back to its initial state before the function is exited).
+This works by changing the terminal I/O settings so that the standard input is no longer buffered for the duration of this function (this is why `oldattr` is queried, to put the terminal back to its initial state before the function is exited).
 
 With this, we can use *macro magic* (basic `#if .. #else ... #endif`) to make our code compilable on both windows and linux:
 ```C
@@ -220,22 +226,21 @@ With this, we can use *macro magic* (basic `#if .. #else ... #endif`) to make ou
         newattr = oldattr;
         newattr.c_lflag &= ~( ICANON | ECHO );
         tcsetattr( STDIN_FILENO, TCSANOW, &newattr );
-        int ch = getchar();
+        int c = getchar();
         tcsetattr( STDIN_FILENO, TCSANOW, &oldattr );
-        return ch;
+        return c;
     }
 #endif
 ```
-
-Now that we can retrieve inputs as they come, we can start to analyse what they look like. For characters from `a` to `z` and from `A` to `Z` (as well as some punctuation and whitespaces like `\n`), the `getch` function returns exactly their *ASCII code*. For more complex inputs like `left_arrow`, an *escape sequence* can occur. For the arrows, these sequences are:
+Now that we can retrieve inputs as they come, we can start to analyse what they look like. For characters from `'a'` to `'z'` and from `'A'` to `'Z'` (as well as some punctuation and whitespaces like `'\n'`), the `getch` function returns exactly their *ASCII code*. For more complex inputs like `left_arrow`, an *escape sequence* can occur. For the arrows, these sequences are:
 - `"\033[A"` for `up_arrow`.
 - `"\033[B"` for `down_arrow`.
 - `"\033[C"` for `right_arrow`.
 - `"\033[D"` for `left_arrow`.
 
-> **(i)** These are also the sequences for moving the *cursor* (where the text is printed in the terminal window) in these directions. This shows how the escape sequences can be used to dialogue with the terminal (for example, we can ask for the cursor position with `"\033[6n"` and the terminal will respond with `"\033[`*`n`*`;`*`m`*`H"`, the sequence for moving the cursor to row `n` and column `m`).
+> **(i)** Note that these are also the sequences for moving the *cursor* (position from which the text is printed in the terminal window) in these directions. This shows how the escape sequences can be used to *dialogue* with the terminal (for example, we can ask for the cursor position with `"\033[6n"` and the terminal will respond in the *standard input* with `"\033[`*`n`*`;`*`m`*`H"`, that we know to be the sequence for moving the cursor to row `n` and column `m`).
 
-These are composed of multiple characters so we have to call `getch` three times to retrieve the complete input, which can make our code messy when we will start to link inputs to game logic. To account for that, I decided to create an *enum* with the non-alphanumerical inputs and a function to deal with the `getch` calls for me:
+These inputs are composed of multiple characters so we have to call `getch` three times to retrieve the complete input, which can make our code messy when we will start to link inputs to game logic. To account for that, I decided to create an *enum* with the non-alphanumerical inputs and a function to deal with the `getch` calls for me:
 ```C
 /// @brief Some non-alphanumerical inputs we might expect
 typedef enum InputKey {
@@ -253,11 +258,12 @@ typedef enum InputKey {
     INPUT_Z_CTRL      = 26,
     
     ESCAPE_CODE       = 27,
-    __INPUT_NON_ASCII = 256,
-    INPUT_UP,
-    INPUT_DOWN,
-    INPUT_RIGHT,
-    INPUT_LEFT,
+    __INPUT_NON_ASCII = 256, // This ensure no collisions with existing ASCII characters codes, as
+                             // as the next entries will count up from 256:
+    INPUT_UP,    // 257
+    INPUT_DOWN,  // 258
+    INPUT_RIGHT, // 259
+    INPUT_LEFT,  // 260
 } input_key;
 
 /// @brief Get the last pressed key
@@ -267,7 +273,7 @@ int inputGet() {
     if (base != ESCAPE_CODE) return base;
 
     const int expect_sqr_bracket = getch();
-    if (expect_sqr_bracket != '[') return -1;
+    if (expect_sqr_bracket != '[') return 0;
 
     const int c = getch();
     switch (c) {
@@ -275,11 +281,118 @@ int inputGet() {
         case 'B': return INPUT_DOWN;
         case 'C': return INPUT_RIGHT;
         case 'D': return INPUT_LEFT;
-        default:  return -1;
+        default:  return 0;
     }
 }
 ```
-This function either returns an ASCII character or value from my aforementionned enum.
+This function either returns an ASCII character or value from the aforementionned enum if it is recognized as such. In any other case, it returns `0` (so that it may be interpreted as `false`). Now that we have a single function to call, we can query the user input in a loop like so :
+```C
+while (1)
+{
+    int input = inputGet();
+    switch(input)
+    {
+        case 'a': {
+            // Action to realize for pressing 'a' without CTRL or MAJ pressed too
+        } break;
+        ...
+        case INPUT_UP: {
+            // Action to realize for pressing up arrow without CTRL or MAJ pressed too
+        } break;
+        ...
+        default: {
+            fprintf(stderr, "UNKNOWN INPUT %d\n", input);
+        } break;
+    }
+}
+```
+> **(i)** The `getch` function (on both Windows and Linux) is still *blocking* in the sense that it waits for the user to press a key before returning a value (aka. the calling thread is put to sleep and woken up by the user input). This means that we can't do *inputs pulling* (waiting on user inputs) in the same thread as the rest of the application (in our case, the game update and the rendering) with this method. An alternative would be to make the standard input *non-blocking* using `fcntl(STDIN_FILENO, ``F_SETFL, ``fcntl(STDIN_FILENO, ``F_GETFL) | O_NONBLOCK)` on Linux or use `getch_nolock` on Windows and just check for *non-zero values*.
+
+In this project we will accomodate for the *blocking* nature of `getch` by calling it in a separate *thread* and store the pressed inputs using a global variable:
+```C
+struct inputs
+{
+    union { // Using a union allows us to iterate over all inputs in a loop in `inputs_update`
+        struct {
+            bool key_a:  // The simple `a` key without CTRL or MAJ
+            bool key_up; // The simple up arrow key without CTRL or MAJ
+        };
+        bool inputs[2];
+    };
+    pthread_mutex_t mutex; // Because the data is shared between two threads, we need to resolve
+                           // collisions when writting by using a mutex
+} INPUTS = { // We use a global variable here as there will only ever be one source for user inputs
+             // and we never manipulate this variable directly (we always use functions which use a
+             // mutex)
+    .mutex = PTHREAD_MUTEX_INITIALIZER
+};
+
+// Shorthand for pthread_mutex_lock(&INPUTS.mutex) and pthread_mutex_unlock(&INPUTS.mutex)
+void inputs_mutex(bool lock)
+{
+    (lock ? pthread_mutex_lock : pthread_mutex_unlock)(&INPUTS.mutex);
+}
+// Function executed in another thread to get user inputs, passed to `pthread_create`
+void *inputs_thread_func(void *_)
+{
+    while (1)
+    {
+        int key = inputGet(); // The infamous blocking function
+
+        inputs_mutex(true);
+        switch (key) {
+            case 'a':      INPUTS.key_a  = true; break;
+            case INPUT_UP: INPUTS.key_up = true; break;
+            default:                             break;
+        }
+        inputs_mutex(false);
+    }
+}
+// Function to be called once per frame which resets the inputs to not being pressed
+void update_inputs()
+{
+    inputs_mutex(true);
+    for (int i = 0; i < 2; ++i) INPUTS.inputs[i] = false;
+    inputs_mutex(false);
+}
+
+int main()
+{
+    // Initialization code ...
+    pthread_t inputs_thread;
+    pthread_create(&inputs_thread, NULL, inputs_thread_func, NULL);
+
+    while (1)
+    {
+        // Logic for updating the game, rendering...
+        
+        update_inputs();   // Last thing in the loop, we reset the input so that it may be updated
+                           // again during the sleep 
+        sleep(1.0 / 30.0); // Sleep to set target FPS to 30 (let's assume `sleep` takes in a float
+                           // for now, we will redefine it as so later anyways)
+    }
+}
+```
+
+# 2. Architecture of the project
+Now that we have a way to display information and a way to acquire user input, we're all set... Or are we ? *Queue in Moon Men by Jake Chudnow...* Yeah we basicaly are, but let's organize everything so that we know have our final project's source code will look like.
+
+We are dealing with three main sections:
+- **Game logic**: where the state of the application is changed (in our case, where the game state is updated).
+- **Rendering**: where the state of the application is converted to be displayed (in our case, the game of tetris in the terminal window)
+- **Inputs processing**: where the user inputs are captured to be used by the application.
+
+> ### /!\ WORK IN PROGRESS /!\
+> This section will continue to be worked on
+
+# 3. Practical example: The game of Tetris
+
+## 3.1 The core gameplay loop
+
+## 3.2 How to manage the pieces
+
+## 3.3 Creating a simple menu
 
 > ### /!\ WORK IN PROGRESS /!\
 > This page will continue to be worked on
+
