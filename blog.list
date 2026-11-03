@@ -1,6 +1,6 @@
 tetris
 31/10/2026
-02/11/2026
+04/11/2026
 en
 Making a simple Tetris game in the terminal
 When trying to learn how to code complex projects, it can be hard going from the simple farenheit.c example to a fully GPU rendered game. As so, and as I have done myself, I think the best intermediate project to attempt is a terminal-rendered game.
