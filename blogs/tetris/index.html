@@ -40,8 +40,7 @@
                     <p>
                         A common base for terminal-rendered applications<br/>
                         1.1 How to draw using a terminal<br/>
-                        1.2 How to query user inputs<br/>
-                        
+                        1.2 How to query user inputs<br/>                        
                     </p>
                 </li>
                 <li>
@@ -53,8 +52,16 @@
                 <li>
                     <p>
                         Practical example: The game of Tetris<br/>
-                        3.1 Defining the scope for the gameplay3.2 Representing the structures and the game state3.3 Defining the logic3.4 Combining everything<br/>
-                        
+                        3.1 Defining the scope for the gameplay<br/>
+                        3.2 Representing the game state<br/>
+                        3.3 Defining the logic<br/>
+                        3.4 Rendering the game<br/>
+                        3.5 Combining everything
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Conclusion
                     </p>
                 </li>
             </ol>
@@ -186,14 +193,18 @@ for (int l = 0; l &lt 5; l++)
                 </li>
             </ul>
             <p>
-                Using this, we can now make our boxes bounce up and down in two different colors :
+                Using this, we can now make our boxes bounce up and down in two different colors (this program is also found at <code class="inline">examples/moving_boxes.c</code> in the project repo):
             </p>
             <pre class="code-box"><code class="language-c">#include &ltstdio.h>
-#include &ltunistd.h>
 #include &ltmath.h>
+#include &ltunistd.h>
+
+// Compile:
+// cc -o moving_boxes moving_boxes.c -lm
 
 int main()
 {
+    printf("\033[2J"); // Clear screen
     // This is a "for loop" so that we have a time reference
     for (int frame_count = 0; ; ++frame_count)
     {
@@ -202,10 +213,8 @@ int main()
         const int offset1 = 2.5 + 2.5 * sin(frame_count * 0.1);
         const int offset2 = 2.5 - 2.5 * sin(frame_count * 0.1); // Out of phase by 180°
 
-        printf(
-            "\033[2J" // Clear entire screen
-            "\033[H"  // Reset cursor position (top-left is the default)
-        );
+        printf("\033[H"); // Reset cursor position (top-left is the default)
+
         for (int l = 0; l &lt 10; l++) // We will work with 10 lines for the screen
         {
             
@@ -563,10 +572,58 @@ int main(int argc, char **argv)
                 The Tetris playing field is a vertical grid of tiles which can either be <i>empty</i> or contain a <i>block</i>. When part of the grid, these blocks can't be modified except when an horizontal line is full, resulting in a <i>line clear</i>. In this case, the line's blocks are removed and all of the blocks above the line are lowered by exactly 1 tile. If multiple lines are set to be cleared at once, then we can consider that each line is cleared one after the other (and thus the blocks above are lowered once per line underneath them). Clearing lines increases the <i>score</i> (based on the current <i>level</i> and the number of lines cleared at once) and, when a threshold is met, the <i>level</i>.
             </p>
             <p>
-                The player can interact with the playing field by manipulating a <i>piece</i> (we'll call it the <i>current piece</i>) which has a <i>position</i>, an <i>orientation</i> (in multiples of 90°) and a <i>shape</i>. The shape is one of the seven <i>tetrominos</i> (arrangement of four adjacent blocks). The current piece cannot be moved outside of the playing field (each block of the piece's shape must be within the grid's boundary) and cannot overlapp any block already present in the grid (no block from the piece's shape can be in the same position as a block from the playing field). If the current piece cannot be move down anymore, then it is integrated to the playing field (each block from the current piece becomes a block of the playin field) and a <i>random tetromino</i> replaces it as the new current piece. If the current piece can exist in its position and orientation, then it is in a <i>legal position</i>. In addition, the piece <i>falls down at a constant rate</i> (which increases as the level goes up) which can be assimilated to gravity.
+                The player can interact with the playing field by manipulating a <i>piece</i> (we'll call it the <i>current piece</i>) which has a <i>position</i>, an <i>orientation</i> (in multiples of 90°) and a <i>shape</i>. The shape is one of the seven <i>tetrominos</i> (arrangement of four adjacent blocks). 
             </p>
             <p>
-                The player can move the current piece <i>left</i> by one tile, <i>right</i> by one tile, <i>down</i> by one tile, <i>snap down</i> the piece to the lowest legal position, <i>rotate clockwise</i> by 90° or <i>rotate counter-clockwise</i> by 90°. If any of theses actions result in an illegal position, then they are not applied to the piece. They can also <i>save</i> the current piece in a dedicated slot to be able to reuse the piece later and continue with the last saved piece if one was saved previously. The player can only save once per placed piece.
+                The current piece cannot be moved outside of the playing field (each block of the piece's shape must be within the grid's boundary) and cannot overlapp any block already present in the grid (no block from the piece's shape can be in the same position as a block from the playing field).<br/>
+                If the current piece cannot be moved down anymore then it is integrated to the playing field (each block from the current piece becomes a block of the playin field) and a <i>random tetromino</i> is chosen to be the <i>new current piece</i>.
+            </p>
+            <p>
+                If the current piece can exist in its current position, then it is said to be in a <i>legal position</i>.
+            </p>
+            <p>
+                During a game update, the player can choose to:
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        move the current piece <i>left</i> by one tile.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        move the current piece <i>right</i> by one tile.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        move the current piece <i>down</i> by one tile.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <i>snap down</i> the piece to the lowest legal position.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <i>rotate clockwise</i> the current piece by 90°.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <i>rotate counter-clockwise</i> the current piece by 90°.
+                    </p>
+                </li>
+            </ul>
+            <p>
+                In addition, the piece <i>falls down at a constant rate</i> (which increases as the level goes up) which can be assimilated to gravity.
+            </p>
+            <p>
+                If any of the actions above results in an illegal position, then they are not applied to the piece.
+            </p>
+            <p>
+                Appart from moving the current piece, the player can also choose to <i>save</i> it in a dedicated slot to be reused later and continue with the last saved piece (if one was previously saved). The player can only save once per placed piece to avoid stalling the piece by repeatedly saving.
             </p>
             <pre class="code-box"><code class="language-">TETROMINOS:
 
@@ -583,7 +640,7 @@ int main(int argc, char **argv)
 |  . . # .  |    |  . # # .  |    |  . . # .  |
 |  . . . .  |    |  . . . .  |    |  . . # .  |
 '-----------'    '-----------'    '-----------'</code></pre>
-            <h2><span class="anchor" id="3.2"></span>3.2 Representing the structures and the game state <a class="text-dim" href="#3.2">#</a></h2>
+            <h2><span class="anchor" id="3.2"></span>3.2 Representing the game state <a class="text-dim" href="#3.2">#</a></h2>
             <p>
                 In tetris we play with <i>tetrominos</i> (arangement of four adjacent <i>blocks</i>), so let's first define what <b>is</b> the <i>tetromino</i> within our program. We know that it has a shape made from four <i>blocks</i>, a <i>color</i> and a number of possible <i>orientations</i> corresponding to the number of 90° rotations you need to apply to the shape before it looks indentical to its default orientation (for example, an <i>L-piece</i> needs four rotations, an <i>S-piece</i> needs two and the <i>square-piece</i> needs only one):
             </p>
@@ -728,7 +785,6 @@ typedef char grid[GRID_WIDTH * GRID_HEIGHT]; // So the type `grid` in an array o
         int level_lines_cleared;      // The number of lines cleared within this level
         int total_lines_cleared;      // The total number of lines cleared since the game's start
         int score;                    // The current score
-        int highscore;                // The highest recorded score achieved 
         
         int fall_time, fall_frame;    // Timers for applying gravity to the current piece
         bool over;                    // Wether the game has been lost (aka. game over)
@@ -738,9 +794,19 @@ typedef char grid[GRID_WIDTH * GRID_HEIGHT]; // So the type `grid` in an array o
 } TETRIS;</code></pre>
             <h2><span class="anchor" id="3.3"></span>3.3 Defining the logic <a class="text-dim" href="#3.3">#</a></h2>
             <p>
-                The structures defined, we can now write logic on <code class="inline">TETRIS.GAME.grid</code> and <code class="inline">TETRIS.GAME.current</code> to:
+                The structures defined, we can now write logic on <code class="inline">TETRIS.GAME</code> to:
             </p>
             <ul>
+                <li>
+                    <p>
+                        Select a <code class="inline">random_tetromino</code>, aka. return a random tetromino from the <code class="inline">TETROMINO</code> array.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">reset_game</code>, aka. reset the state of <code class="inline">TETRIS.GAME</code> to start a new game.
+                    </p>
+                </li>
                 <li>
                     <p>
                         Check wether <code class="inline">is_move_legal</code>, aka. wether a piece placement is contained within the grid (except for the top side to allow pieces to fall from above the playing field) and it doesn't overlapp already placed blocks within the grid.
@@ -752,7 +818,22 @@ typedef char grid[GRID_WIDTH * GRID_HEIGHT]; // So the type `grid` in an array o
                     </p>
                 </li>
             </ul>
-            <pre class="code-box"><code class="language-c">// Check if local position (x, y) is in current piece rotated by (rot)
+            <pre class="code-box"><code class="language-c">// Return a random tetromino from the `TETROMINOS` array
+const tetromino *random_tetromino()
+{
+    // This function could be improved to make repeat pieces impossible or better distribute the
+    // pieces, but a simple uniform-ish distribution is a good start
+    return &ampTETROMINOS[rand() % 7]; // There are seven tetrominos
+}
+void reset_game()
+{
+    memset(&ampTETRIS.GAME, 0, sizeof(TETRIS.GAME));
+
+    TETRIS.GAME.level      = TETRIS.level_at_reset;
+    TETRIS.GAME.fall_time  = 16;
+    TETRIS.GAME.next_piece = random_tetromino();
+}
+// Check if local position (x, y) is in current piece rotated by (rot)
 // x, y and rot must be between 0 and 3, both inclusive
 bool is_pos_in_current_piece_rotated(int rot, int x, int y)
 {
@@ -865,7 +946,7 @@ void update_game(int horizontal, int vertical, int rotation, bool save_piece, bo
 CHECK_PLACE:
     // If applying any transformation failed, check if the piece cannot be placed
     if (!is_move_legal(TETRIS.GAME.current.rotation, TETRIS.GAME.current.x, TETRIS.GAME.current.y)) {
-        // Should only happen when there is no more space to place a tetromino. Therefore, this constitutes as a gameover condition
+        // Should only happen when there is no more space to place a tetromino. Therefore, this constitutes a gameover condition
         TETRIS.GAME.over = true;
         return;
     }
@@ -899,7 +980,7 @@ CHECK_PLACE:
     }
 
     // If we have a new highscore, update it
-    if (TETRIS.GAME.highscore &lt TETRIS.GAME.score) TETRIS.GAME.highscore = TETRIS.GAME.score;
+    if (TETRIS.highscore &lt TETRIS.GAME.score) TETRIS.highscore = TETRIS.GAME.score;
     
     // Finaly, check if we have cleared enough lines to go to the next level
     if (TETRIS.GAME.level_lines_cleared >= 10) {
@@ -916,7 +997,7 @@ CHECK_PLACE:
 
 NEXT:
     TETRIS.GAME.current.piece = TETRIS.GAME.next_piece;
-    TETRIS.GAME.next_piece = random_tetromino();
+    TETRIS.GAME.next_piece = random_tetromino(); // Returns a random pointer in `TETROMINOS` array
     TETRIS.GAME.already_saved_piece = false;
 RESET:
     TETRIS.GAME.current.rotation = 0;
@@ -925,49 +1006,86 @@ RESET:
 
     TETRIS.GAME.fall_frame = 0; // Makes it just a smidge more consistent
 }</code></pre>
-            <hgroup>
-                <h3>/!\ WORK IN PROGRESS /!\</h3>
-                <p>
-                     This section will continue to be worked on
-                </p>
-            </hgroup>
-            <h2><span class="anchor" id="3.3"></span>3.3 Rendering the game <a class="text-dim" href="#3.3">#</a></h2>
+            <h2><span class="anchor" id="3.4"></span>3.4 Rendering the game <a class="text-dim" href="#3.4">#</a></h2>
+            <p>
+                Our game needs to display multiple things to the user. We need to display the playing field as a grid of colored squares, and include the current piece when rendering it as if it were part of the grid (so that it looks like the current piece is part of the grid). In addition, we need the user to be aware of which piece comes next and which piece they have saved (if any). Finally, game statistics like the current level, score, highscore or the number of lines cleared should also appear.
+            </p>
+            <p>
+                Once again, you can explore your creativity here. I'll choose to display everything in the following layout:
+            </p>
+            <pre class="code-box"><code class="language-">.--------------------.
+|                    |  .--------.
+|                    |  |        |
+|                    |  | *NEXT* |
+|                    |  | *PIECE*|
+|                    |  |        |
+|                    |  '--NEXT--'
+|                    |
+|                    |  .--------.
+|                    |  |        |
+|                    |  | *SAVED*|
+|                    |  | *PIECE*|
+|  *PLAYING FIELD*   |  |        |
+|                    |  '--SAVE--'
+|                    |
+|                    |  LINES:   0
+|                    |
+|                    |  LEVEL:   0
+|                    |
+|                    |  HIGHSCORE:
+|                    |  0000000000
+|                    |
+|                    |  SCORE:
+|                    |  0000000000
+|                    |
+'--------------------'</code></pre>
+            <p>
+                Where the text in <code class="inline">*asteriscs*</code> corresponds to colored blocks representing the playing field (with the current piece inserted within), the saved piece (just blank if nothing) and the next piece.
+            </p>
+            <p>
+                To simplify the rendering of the playing area, we'll copy the playing field's grid and draw the current piece into it:
+            </p>
             <pre class="code-box"><code class="language-c">static struct tetris
 {
     struct game   { ... } GAME;
-    struct render 
+    struct render
     {
-        grid  grid;
-        int   cursor;
-        char  buffer[2048];
+        grid grid;         // Copy of TETRIS.GAME.grid in which we'll also insert TETRIS.GAME.current using `place_current_piece_in_grid(TETRIS.RENDER.grid)`
     } RENDER;
     struct inputs { ... } INPUTS;
 } TETRIS;</code></pre>
+            <p>
+                In addition, I'll define some <i>wrapper functions</i> to define the drawing logic (which is not strictly necessary but which synthaxicaly unifies <code class="inline">fputc</code>, <code class="inline">fputs</code> and <code class="inline">fprintf</code> under a common name to better signal what they achieve in this context):
+            </p>
             <pre class="code-box"><code class="language-c">void drawf(const char *fmt, ...) 
 {
-    va_list argv;
-    va_start(argv, fmt);
-    TETRIS.RENDER.cursor += vsnprintf(TETRIS.RENDER.buffer + TETRIS.RENDER.cursor, sizeof(TETRIS.RENDER.buffer) - TETRIS.RENDER.cursor, fmt, argv);
-    va_end(argv);
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(stdout, fmt, args);
+    va_end(args);
 }
 void draws(const char *str)
 {
-    int len = strlen(str);
-    strncpy(TETRIS.RENDER.buffer + TETRIS.RENDER.cursor, str, len);
-    TETRIS.RENDER.cursor += len;
+    fputs(str, stdout);
 }
 void drawc(char c)
 {
-    if (TETRIS.RENDER.cursor &lt sizeof(TETRIS.RENDER.buffer)) 
-        TETRIS.RENDER.buffer[TETRIS.RENDER.cursor++] = c;
+    fputc(c, stdout);
 }
 void drawnc(int count, char c)
 {
-    for (int i = 0; i &lt count &amp&amp TETRIS.RENDER.cursor &lt sizeof(TETRIS.RENDER.buffer); ++i) 
-        TETRIS.RENDER.buffer[TETRIS.RENDER.cursor++] = c;
+    for (int i = 0; i &lt count; ++i) fputc(c, stdout);
 }</code></pre>
+            <hgroup>
+                <p>
+                    <b>(i)</b> Defining functions which <i>abstract away</i> the underlying functionnality (in the sense that they hide the implementation details to appear more generic) is useful when writting code which could be implemented in a multitude of ways. For example, if I wanted to render everything to a file for debugging, it would be easy to only modify the <code class="inline">draw{...}</code> functions instead of having to go through the entire rendering logic.
+                </p>
+            </hgroup>
+            <p>
+                To achieve the wanted output, we will print the result line by line using the <code class="inline">switch</code> method presented in the examples of <a class="text-accent underline" href="#1.1">part 1.1</a>. Each line, we will first render the playing field by indexing into the <code class="inline">TETRIS.RENDER.grid</code> and then, depending on the current line, render either the <i>next piece</i> box, the <i>saved piece</i> box or the game statistics (score, lines, etc.):
+            </p>
             <pre class="code-box"><code class="language-c">// Render the game output to the screen
-// We make the assumption that there is a curretly selected piece anytime this function is called
+// We make the assumption that there is a currently selected piece anytime this function is called
 void render()
 {
     ///// First, we build the grid which will be render on screen (aka. the already placed blocks + the current piece)
@@ -975,7 +1093,6 @@ void render()
     place_current_piece_in_grid(TETRIS.RENDER.grid);
     
     ///// Then we draw the entire UI (aka. main game area + the widgets on the left, like score or 'next piece' box)
-    TETRIS.RENDER.cursor = 0;
     draws("\033[1H"); // Move cursor to top left of screen
 
     drawc('.'); drawnc(GRID_WIDTH * 2, '-'); draws(".\n"); // Draw top line
@@ -987,7 +1104,7 @@ void render()
         draws("\033[0m|");
         for (int i = 0; i &lt GRID_WIDTH; i++) {
             if (TETRIS.RENDER.grid[i + GRID_WIDTH * j] != col) drawf("\033[%dm  ", col = TETRIS.RENDER.grid[i + GRID_WIDTH * j]);
-            else                                             draws("  ");
+            else                                               draws("  ");
         }
         draws("\033[0m|");
 
@@ -1007,7 +1124,8 @@ void render()
             case 7: draws("  .--------."); break;
             case 8: case 9: case 10: case 11: {
                 drawf("  |");
-                // We might not have a saved piece, in which case we don't want to draw anything in the box
+                // We might not have a saved piece, in which case we don't want to draw anything in
+                // the box
                 if (TETRIS.GAME.saved_piece) for (int i = 0; i &lt 4; ++i) drawf("\033[%dm  ", TETRIS.GAME.saved_piece->shape[i + (j - 8) * 4] * TETRIS.GAME.saved_piece->color);
                 else                         draws("        ");
                 draws("\033[0m|");
@@ -1019,7 +1137,7 @@ void render()
             case 16: drawf("  LEVEL: % 3d", TETRIS.GAME.total_lines_cleared); break;
             
             case 18: draws("  HIGHSCORE:"); break;
-            case 19: drawf("  %010d", TETRIS.GAME.highscore); break;
+            case 19: drawf("  %010d", TETRIS.highscore); break;
             
             case 21: draws("  SCORE:"); break;
             case 22: drawf("  %010d", TETRIS.GAME.score); break;
@@ -1031,17 +1149,199 @@ void render()
     }
 
     drawc('\''); drawnc(GRID_WIDTH * 2, '-'); drawc('\''); // Draw bottom line
-    
-    drawc('\0'); // We must not forget to add a null byte at the end of our render buffer to make it a valid C string before pushing to the terminal
-    puts(TETRIS.RENDER.buffer);
 }</code></pre>
-            <h2><span class="anchor" id="3.4"></span>3.4 Combining everything <a class="text-dim" href="#3.4">#</a></h2>
+            <h2><span class="anchor" id="3.5"></span>3.5 Combining everything <a class="text-dim" href="#3.5">#</a></h2>
+            <p>
+                Let's combine everything we've written so far to make the final executable!
+            </p>
+            <p>
+                First, let's extend the <a class="text-accent underline" href="#1.2">part 1.2</a> <i>inputs thread function</i> to query every keyboard input we need: 
+            </p>
+            <pre class="code-box"><code class="language-c">void *inputs_thread_func(void *_)
+{
+    while (1)
+    {
+        int key = get_input();
+
+        inputs_mutex(true);
+        switch (key) {
+            // Move left one tile
+            case 'q':         TETRIS.INPUTS.left            = true; break;
+            // Move right one tile
+            case 'd':         TETRIS.INPUTS.right           = true; break;
+            // Move down one tile
+            case 's':         TETRIS.INPUTS.down            = true; break;
+            // Save piece
+            case 'a':         TETRIS.INPUTS.save            = true; break;
+             
+            // Rotate clockwise
+            case INPUT_RIGHT: TETRIS.INPUTS.rotate_counter  = true; break;
+            // Rotate counter-clockwise
+            case INPUT_LEFT: TETRIS.INPUTS.rotate_clockwise = true; break;
+            // Snap down to lowest legal position
+            case INPUT_DOWN: case 'S': // [SHIFT + s] 
+                TETRIS.INPUTS.snap_down                     = true; break;
+ 
+            // Select/advance in menu 
+            case INPUT_ENTER: TETRIS.INPUTS.select          = true; break;
+            // Exit the program
+            case INPUT_C_CTRL: exit(0);
+            default:           break;
+        }
+        inputs_mutex(false);
+    }
+}</code></pre>
+            <p>
+                Next, let's add a <i>title-screen</i> to the game to explain the controls to the user. To do that, we'll display the controls and the game's title when the program is launched:
+            </p>
+            <pre class="code-box"><code class="language-">   _____   _____   _____   ____     _____   ______  
+  |__ __| | ____| |__ __| | __  \  |__ __| /  ___ \ 
+     | |   | |__     | |   | |_\ |    | |   \  \___  
+      | |   |  __|    | |   |  _ &lt     | |    '--.. \ 
+       | |   | |___    | |   | | \ \   _| |_   _____\ |
+        |_|   |_____|   |_|   |_|  \_\ |_____|  \_____/
+
+ [Q] [D]  : Move piece left or right
+   [S]    : Move piece down
+   [↓]    : Snap piece down instantaniously
+ [←] [→]  : Rotate piece clockwise or counter-clockwise
+   [A]    : Save piece
+  [^C]    : Force quit game
+
+&lt Press ENTER to start game ></code></pre>
+            <p>
+                ...and wait for the user to press <i>enter</i> to start the actual game:
+            </p>
+            <pre class="code-box"><code class="language-c">// Wait for ENTER key to be pressed
+void wait_enter()
+{
+    while (1)
+    {
+        inputs_update();
+        sleep(1.0 / 15.0);
+        if (TETRIS.INPUTS.select) break;
+    }
+}</code></pre>
+            <p>
+                Afterwards, we will launch the actual game by:
+            </p>
+            <ol>
+                <li>
+                    <p>
+                        Resetting the game state to start a new game.
+                    </p>
+                    <pre class="code-box"><code class="language-c">printf("\033[2J"); // Clear screen
+reset_game();</code></pre>
+                </li>
+            <!-- </ol>
+            <ol> -->
+                <li>
+                    <p>
+                        Running the <i>game loop</i> until the game is over:
+                    </p>
+                    <pre class="code-box"><code class="language-c">while (!TETRIS.GAME.over)
+{
+    // Read user inputs
+    inputs_mutex(true);
+    const int  ud   = (int)TETRIS.INPUTS.down;
+    const int  lr   = (int)TETRIS.INPUTS.right - TETRIS.INPUTS.left;
+    const int  rot  = (int)TETRIS.INPUTS.rotate_clockwise - TETRIS.INPUTS.rotate_counter;
+    const bool save = TETRIS.INPUTS.save;
+    const bool snap = TETRIS.INPUTS.snap_down;
+    inputs_mutex(false);
+
+    // Update game, render game and update inputs
+    update_game(lr, ud, rot, save, snap);
+    render();
+    inputs_update();
+
+    sleep(1/60.0); // We want to target around 60 FPS, we guestimate that a negligeable part of the
+    // frame time is spent on processing
+}</code></pre>
+                </li>
+            <!-- </ol>
+            <ol> -->
+                <li>
+                    <p>
+                        When the game is over, displaying <code class="inline">"GAME OVER"</code> and waitting for the user to press <i>enter</i> to loop back to the title-screen.
+                    </p>
+                    <pre class="code-box"><code class="language-c">// Display "GAME OVER" in the center of the playing field and
+// "&lt Press ENTER to continue >" at the bottom of the screen
+printf("\033[%d;%dHGAME OVER\033[100;0H&lt Press ENTER to continue >", 
+        1 + GRID_HEIGHT / 2, 2 + GRID_WIDTH - (int)sizeof("GAME OVER") / 2);
+wait_enter();</code></pre>
+                </li>
+            </ol>
+            <p>
+                Combining all of the above together yields the <i>main loop</i>:
+            </p>
+            <pre class="code-box"><code class="language-c">int main(int argc, char **argv)
+{
+    // Initialise program
+    ...
+
+    while (1) // Main loop
+    {
+        // Display title-screen
+        printf(
+            "\033[2J" // Clear terminal window
+            "\033[1H" // Reset cursor position
+            "   _____   _____   _____   ____     _____   ______  \n"
+            "  |__ __| | ____| |__ __| | __  \\  |__ __| /  ___ \\ \n"
+            "     | |   | |__     | |   | |_\\ |    | |   \\  \\___  \n"
+            "      | |   |  __|    | |   |  _ &lt     | |    '--.. \\ \n"
+            "       | |   | |___    | |   | | \\ \\   _| |_   _____\\ |\n"
+            "        |_|   |_____|   |_|   |_|  \\_\\ |_____|  \\_____/ \n"
+            "\n"
+            " [Q] [D]  : Move piece left or right\n"
+            "   [S]    : Move piece down\n"
+            "   [↓]    : Snap piece down instantaniously\n"
+            " [←] [→]  : Rotate piece clockwise or counter-clockwise\n"
+            "   [A]    : Save piece\n"
+            "  [^C]    : Force quit game\n"
+            "\n"
+            "&lt Press ENTER to start game >\n"
+        );
+        wait_enter();
+
+        // Start game
+        printf("\033[2J"); // Clear screen
+        reset_game();
+        while (!TETRIS.GAME.over)
+        {
+            // Read user inputs
+            inputs_mutex(true);
+            const int  ud   = (int)TETRIS.INPUTS.down;
+            const int  lr   = (int)TETRIS.INPUTS.right - TETRIS.INPUTS.left;
+            const int  rot  = (int)TETRIS.INPUTS.rotate_clockwise - TETRIS.INPUTS.rotate_counter;
+            const bool save = TETRIS.INPUTS.save;
+            const bool snap = TETRIS.INPUTS.snap_down;
+            inputs_mutex(false);
+
+            // Update game, render game and update inputs
+            update_game(lr, ud, rot, save, snap);
+            render();
+            inputs_update();
+
+            sleep(1/60.0); // We want to target around 60 FPS, we guestimate that a negligeable
+                        // part of the frame time is spent on processing
+        }
+        // Display "GAME OVER" in the center of the playing field and
+        // "&lt Press ENTER to continue >" at the bottom of the screen
+        printf("\033[%d;%dHGAME OVER\033[100;0H&lt Press ENTER to continue >", 
+                1 + GRID_HEIGHT / 2, 2 + GRID_WIDTH - (int)sizeof("GAME OVER") / 2);
+        wait_enter();
+    }
+}</code></pre>
+            <p>
+                As a bonus, we'll make sure to save the highscore between runs of the program by keeping it into an external file. To achieve this, we'll define a <code class="inline">load_highscore</code> function which will read the highscore from the file into the <code class="inline">TETRIS.highscore</code> variable and a <code class="inline">save_highscore</code> function which will write it back into the file. To ensure that it is written when exiting the program, we'll pass it as a <i>callback</i> to <code class="inline">atexit</code>:
+            </p>
             <pre class="code-box"><code class="language-c">// Load the highscore from the save file
 void load_highscore()
 {
     FILE* f = fopen("highscore.txt", "r");
     if (f) {
-        fscanf(f, "%d", &ampTETRIS.GAME.highscore);
+        fscanf(f, "%d", &ampTETRIS.highscore);
         fclose(f);
     }
 }
@@ -1050,32 +1350,33 @@ void save_highscore()
 {
     FILE *f = fopen("highscore.txt", "w");
     if (f) {
-        fprintf(f, "%d", TETRIS.GAME.highscore);
+        fprintf(f, "%d", TETRIS.highscore);
         fclose(f);
     }
-    puts("\033[31m[EXIT]\033[?25h\033[0m\n"); // Reset terminal appearance
+    // This function will be called "at exit", which means that it is the last thing which will be
+    // exectuted before the program terminates. Therfore, we have to make sure that we reset the
+    // terminal settings here (color, show cursor).
+    puts("\033[31m[EXIT]\033[?25h\033[0m\n");
 }</code></pre>
-            <pre class="code-box"><code class="language-c">// Wait for ENTER key to be pressed
-void wait_enter()
+            <hgroup>
+                <p>
+                    <b>(i)</b> The <code class="inline">atexit</code> function (found in <code class="inline">&ltstdlib.h></code>) allows users to <i>register</i> a function to be called when the <code class="inline">exit</code> function is called or when <code class="inline">main</code> returns (they are equivalent). This means that every functions passed to <code class="inline">atexit</code> will be executed just before the program terminates, allowing us to ensure that the highscore is always saved before exiting the program. This is also why we reset the terminal state in this function.
+                </p>
+            </hgroup>
+            <p>
+                Finally, we'll combine everything to make the <code class="inline">main</code> function:
+            </p>
+            <pre class="code-box"><code class="language-c">int main(int argc, char **argv)
 {
-    while (1)
-    {
-        sleep(1.0 / 15.0);
-        if (TETRIS.INPUTS.select) break;
-        inputs_update();
-    }
-}
-
-int main(int argc, char **argv)
-{
-    if (argc >= 2)                       TETRIS.GAME.level_at_reset = atoi(argv[1]);
-    if (TETRIS.GAME.level_at_reset &lt= 0) TETRIS.GAME.level_at_reset = 1;
+    if (argc >= 2)                  TETRIS.level_at_reset = atoi(argv[1]);
+    if (TETRIS.level_at_reset &lt= 0) TETRIS.level_at_reset = 1;
 
     srand(time(NULL)); // Make sure the game doesn't play out the same everytime the app is launched
 
     load_highscore();
     atexit(save_highscore); // Make sure the highscore is saved when the program closes
 
+    // Start the thread which queries user inputs
     pthread_t inputs_thread;
     pthread_create(&ampinputs_thread, NULL, inputs_thread_func, NULL);
 
@@ -1128,6 +1429,9 @@ int main(int argc, char **argv)
         wait_enter();
     }
 }</code></pre>
+        </section>
+        <section>
+            <h1><span class="anchor" id="4"></span>4. Conclusion <a class="text-dim" href="#4">#</a></h1>
             <hgroup>
                 <h3>/!\ WORK IN PROGRESS /!\</h3>
                 <p>
