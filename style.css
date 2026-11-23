@@ -111,14 +111,26 @@ section {
 
     h1, h2, h3, h4, h5, h6 { padding-bottom: 1.0rem; }
     p      { padding-bottom: 0.6rem; }
-    ul, ol { padding-left:   2.0em;  }
-    
+    ul, ol { padding-left:   2.0em; }
+
     ul.spaced, ol.spaced {
-        li:not(:last-child) {
-            padding-bottom: 1.0em;
+        li:not(:last-child) { padding-bottom: 1.0em; }
+        li     :first-child { padding-bottom: 0.5em; }
+    }
+
+    ol {
+        list-style-type: none;
+        counter-reset: item;
+        
+        li:before {
+            position: absolute;
+            counter-increment: item;
+            transform: translate(calc(-100% - .25em), 0);
+            content:   counters(item, ".") ".";
         }
-        li :first-child {
-            padding-bottom: 0.5em;
+        li li:before {
+            transform: translate(calc(-100% - .5em), 0);
+            content:   counters(item, ".");
         }
     }
 

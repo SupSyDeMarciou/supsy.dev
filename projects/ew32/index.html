@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../style.css" type="text/css"/>
+    <link rel="stylesheet" href="../../external/prism.css"/>
+    <!-- <link rel="icon" href="icons/supsy.png"> -->
+    <title>supsy.dev - Project - EasyWIN32</title>
+    <!-- <FONT> -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,293;1,293&display=swap" rel="stylesheet">
+    <!-- </FONT> -->
+    <base href="">
+</head>
+<body>
+    <main>
+        <header>
+            <p><a href="../../index.html">SupSy<span class="text-accent">.dev</span></a></p>
+            <p class="no-select">|</p>
+            <p><a href="../../blog.html">Blog</a></p>
+            <p class="no-select">|</p>
+            <p><a href="../../projects.html">Projects</a></p>
+        </header>
+        <section>
+            <h1><span class="anchor" id="EasyWIN32"></span>EasyWIN32 <a class="text-dim" href="#EasyWIN32">#</a></h1>
+            <p>
+                An interface for the Windows API to create simple CPU-rendered applications.
+            </p>
+            <p>
+                You can find the repo here: <a class="text-accent underline" href="https://github.com/SupSyDeMarciou/EasyWIN32">EasyWin32</a>.
+            </p>
+            <hgroup>
+                <h3>/!\ This library is not maintained anymore /!\</h3>
+            </hgroup>
+            <h2><span class="anchor" id="How"></span>How to use <a class="text-dim" href="#How">#</a></h2>
+            <p>
+                This library depends on <b>GDI32</b>, so compile with <code class="inline">-lgdi32</code>.<br/>
+                
+            </p>
+            <p>
+                A basic program using <b>EasyWIN32</b> looks like this:
+            </p>
+            <pre class="code-box"><code class="language-c">#include &ltEasyWIN32.h>
+
+int main() {
+
+    // Initialize the window with default parameters
+    EW32_Initilize("EasyWIN32 test window", EW32_GetDefaultInitParams());
+
+    // ... initialization code
+
+    while (!EW32_ShouldClose()) // Main loop
+    {
+        EW32_StartFrame(); // Updates input and time
+
+        // ... Main loop code
+
+        EW32_EndFrame();
+    }
+
+    return 0;
+}</code></pre>
+            <h2><span class="anchor" id="Features"></span>Features <a class="text-dim" href="#Features">#</a></h2>
+            <p>
+                <b>EasyWIN32</b> provides utilities for mouse and keyboard inputs, simple time access and rendering to the screen.<br/>
+                
+            </p>
+            <h3><span class="anchor" id="INPUT"></span>INPUT <a class="text-dim" href="#INPUT">#</a></h3>
+            <p>
+                Inputs can be accessed using functions prefixed by <code class="inline">EW32_input</code>. Key states are stored as binary masks to allow for multiple states to be stored at once. By setting the <code class="inline">doDoubleClick</code> initialization parameter, you can have a <code class="inline">EW32_INPUT_DOUBLE_CLICK</code> state on mouse keys.
+            </p>
+            <h3><span class="anchor" id="TIME"></span>TIME <a class="text-dim" href="#TIME">#</a></h3>
+            <p>
+                Time can be accessed using functions prefixed by <code class="inline">EW32_time</code>. The values accessible are calculated during <code class="inline">EW32_StartFrame</code> and <code class="inline">EW32_EndFrame</code> calls, which is why they should be called in the main update loop. By setting the <code class="inline">doAlwaysRedrawFrame</code> initialization parameter, you can have the window render the frame at each <code class="inline">EW32_EndFrame</code> call.
+            </p>
+            <h3><span class="anchor" id="RENDER"></span>RENDER <a class="text-dim" href="#RENDER">#</a></h3>
+            <p>
+                You can send a texture to be rendered on screen using <code class="inline">EW32_textureSet</code> or retrieve the currently rendering texture using <code class="inline">EW32_textureGet</code>. By setting the <code class="inline">doBilinearInterpolation</code> initialization parameter, you can choose to smooth out the texture render.
+            </p>
+        </section>
+        <footer><p>Vlad MUNTEANU 2026 - All rights reserved.</p></footer>
+        <script src="../../external/prism.js"></script>
+    </main>
+</body>
+</html>

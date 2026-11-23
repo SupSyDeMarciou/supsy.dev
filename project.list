@@ -1,16 +1,23 @@
+ew32
+26/10/2026
+23/11/2026
+en
+EasyWIN32
+An interface for the Windows API to create simple CPU-rendered applications.
+
+sl
+26/10/2026
+23/11/2026
+en
+SupSyLibraries
+This C library acts as a bundle of multiple useful libraries for helping with linear arithmetics, generic structures and others.
+
 test
 28/10/2026
 28/10/2026
 en
 Test project
 This is only a test for generating projects, not a real project.
-
-sl
-26/10/2026
-26/10/2026
-en
-SupSyLibraries (SL)
-Useful libraries for helping with linear algebra, generic structures and others.
 
 sge
 26/10/2026
@@ -24,11 +31,4 @@ sbs
 26/10/2026
 en
 SupSyBuildSystem (SBS)
-Building C code using C code. Inspired by Tsoding's "nod.h", but developped separetly.
-
-ew32
-26/10/2026
-26/10/2026
-en
-EasyWin32 (EW32)
-Basic interface with the Windows api for creating a window, querying inputs and rendering (CPU-side)
+Building C code using C code. Inspired by Tsoding's "nob.h", but developped separetly.

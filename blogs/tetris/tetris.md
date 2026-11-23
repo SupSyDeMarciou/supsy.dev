@@ -7,17 +7,17 @@ In this blog, I will build a simple terminal-rendered ***Tetris*** using ASCII c
 The main objective is to have fun: this is not a tutorial on efficient TUI application design, general software development or game design. My goal is to make this project as well documented as possible to help new C programmers have a better grasp of how to actually achieve such a project.
 
 ## Contents
-1. A common base for terminal-rendered applications  
-    - 1.1 How to draw using a terminal  
-    - 1.2 How to query user inputs  
-2. Architecture of the project  
-3. Practical example: The game of Tetris  
-    3.1 Defining the scope for the gameplay  
-    3.2 Representing the game state  
-    3.3 Defining the logic  
-    3.4 Rendering the game  
-    3.5 Combining everything
-4. Conclusion
+1. [A common base for terminal-rendered applications](#1)
+    1. [How to draw using a terminal](#1.1)
+    2. [How to query user inputs](#1.2)
+2. [Architecture of the project](#2)
+3. [Practical example: The game of Tetris](#3)
+    1. [Defining the scope for the gameplay](#3.1)
+    2. [Representing the game state](#3.2)
+    3. [Defining the logic](#3.3)
+    4. [Rendering the game](#3.4)
+    5. [Combining everything](#3.5)
+4. [Conclusion](#4)
 
 ![Finished Tetris game in the terminal](terminal_view.png)
 

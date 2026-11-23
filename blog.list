@@ -1,6 +1,13 @@
+test
+26/10/2026
+23/11/2026
+en
+Test blog
+This is only a test blog, there is nothing to see here.
+
 tetris
 31/10/2026
-05/11/2026
+23/11/2026
 en
 Making a simple Tetris game in the terminal
 When trying to learn how to code complex projects, it can be hard going from the simple farenheit.c example to a fully GPU rendered game. As so, and as I have done myself, I think the best intermediate project to attempt is a terminal-rendered game.
@@ -11,10 +18,3 @@ algo_prog1
 fr
 Formation d'AlgoProg 1
 Ce blog est issu d'une formation que j'ai mise au point pour le cours d'Algorithmique et Programmation 1 de 1ère année à l'ISMIN (au moment où j'écris ce blog, j'y suis en 3ème année).
-
-test
-26/10/2026
-28/10/2026
-en
-Test blog
-This is only a test blog, there is nothing to see here.

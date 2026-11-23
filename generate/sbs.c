@@ -42,13 +42,14 @@ typedef enum g_element_type
     ELEM_BOX,
 } g_element_type;
 
-typedef struct g_inline  g_inline;
-typedef struct g_list    g_list;
-typedef struct g_title   g_title;
-typedef struct g_para    g_para;
-typedef struct g_code    g_code;
-typedef struct g_box     g_box;
-typedef struct g_elem    g_elem;
+typedef struct g_inline    g_inline;
+typedef struct g_list      g_list;
+typedef struct g_list_item g_list_item;
+typedef struct g_title     g_title;
+typedef struct g_para      g_para;
+typedef struct g_code      g_code;
+typedef struct g_box       g_box;
+typedef struct g_elem      g_elem;
 
 DEF_ARRAY(g_inline);
 DEF_ARRAY(g_list);
@@ -72,10 +73,13 @@ struct g_para
     array(g_inline) text;
 };
 
+struct g_list_item
+{
+    array(g_elem) items;
+};
 struct g_list
 {
     bool is_ordered;
-    int indent;
     array(g_elem) items;
 };
 
@@ -87,24 +91,25 @@ struct g_code
 
 struct g_box
 {
-    usize depth;
     array(g_elem) items;
 };
 
 struct g_elem
 {
     file_loc loc;
+    int indent;
     g_element_type type;
     union {
-        g_inline in;
-        g_title  ti;
-        g_para   pa;
-        g_list   li;
-        g_code   co;
-        g_box    bx;
+        g_inline    in;
+        g_title     ti;
+        g_para      pa;
+        g_list      li;
+        g_list_item li_it;
+        g_code      co;
+        g_box       bx;
     };
 };
-#define g_elem_(type_, loc_, ...) ((g_elem){.type = type_, .loc = loc_, ##__VA_ARGS__})
+#define g_elem_(type_, loc_, indent_, ...) ((g_elem){.type = type_, .loc = loc_, .indent = indent_, ##__VA_ARGS__})
 
 void print_elem(g_elem *elem, usize indent)
 {
@@ -161,6 +166,18 @@ void print_elem(g_elem *elem, usize indent)
 }
 
 
+typedef enum md_context_type {
+    MD_CONTEXT_GLOBAL,
+    MD_CONTEXT_LIST_ITEM,
+    MD_CONTEXT_LIST,
+    MD_CONTEXT_BOX,
+} md_context_type;
+typedef struct md_context {
+    md_context_type type;
+    array(g_elem) *items;
+    int indent;
+} md_context;
+DEF_ARRAY(md_context);
 
 typedef struct md_reader {
     FILE *f;
@@ -168,7 +185,7 @@ typedef struct md_reader {
     char line[2048];
     int indent;
 
-    array(g_list) list_stack;
+    array(md_context) contexts;
     bool reuse_line;
 } md_reader;
 #define md_at(md, ...) ((md)->line[(md)->loc.c + (0, ##__VA_ARGS__)])
@@ -197,10 +214,10 @@ char *readline(md_reader *md)
 g_inline parse_md_inline(md_reader *md, g_inline_type *type)
 {   
     g_inline text = { .loc = md->loc, .type = *type, .str = NULL };
-    if (strcmp(&md_at(md), "  ") == 0)
+    if (strcmp(&md_at(md), "  ") == 0 || md_at(md) == '\0')
     {
         text.type = INLINE_NEWL;
-        md_mv(md, 2);
+        if (md_at(md)) md_mv(md, 2);
         return text;
     }
 
@@ -281,15 +298,32 @@ g_inline parse_md_inline(md_reader *md, g_inline_type *type)
     return text;
 }
 
-bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pindent, int box_depth)
+md_context *find_md_context(md_reader *md, md_context_type type)
 {
+    for (ssize i = md->contexts.count - 1; i > 0; --i) 
+        if (md->contexts.data[i].type == type) return md->contexts.data + i;
+    return NULL;
+}
+
+bool parse_md_elem(md_reader *md, int box_depth, int parse_depth)
+{
+    array(g_elem) *elements = arrayLast(md->contexts)->items;
     usize ordered_label_length = 0;
-    switch (md_at(md)) {
-        case '\0': arrayAdd(*elements, g_elem_(ELEM_BREAK, md->loc)); break;
+    
+    switch (md_at(md))
+    {
+        case '\0': {
+            if (parse_depth == 0)
+            {
+                md->contexts.count = 1;
+                arrayAdd(*md->contexts.data[0].items, g_elem_(ELEM_BREAK, md->loc, md->indent)); 
+            }
+            else goto TEXT;
+        } break;
 
         case '#':
         {
-            g_elem title = g_elem_(ELEM_TITLE, md->loc);
+            g_elem title = g_elem_(ELEM_TITLE, md->loc, md->indent);
             while (md_at(md) == '#') md_mv(md, 1), title.ti.depth++;
             if (!isspace(md_at(md))) {
                 md->loc = title.loc;
@@ -310,7 +344,7 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
         case '`':
         {
             if (!strstart(&md_at(md), "```")) goto TEXT;
-            g_elem code = g_elem_(ELEM_CODE, md->loc);
+            g_elem code = g_elem_(ELEM_CODE, md->loc, md->indent);
 
             md_mv(md, 3);
             code.co.language = strdup(&md_at(md));
@@ -346,91 +380,86 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
         {
             if (!isspace(md_at(md, 1))) goto TEXT;
         LIST:
-            if (md->list_stack.count == 0 || arrayLast(md->list_stack)->indent < cindent)
+            md_context *ctx = find_md_context(md, MD_CONTEXT_LIST);
+            if (!ctx || ctx->indent < md->indent)
             {
-                // printf("[LIST] Creating new list\n");
-
-                file_loc list_loc = md->loc;
-                g_list *list = arrayAdd(md->list_stack, ((g_list) {
-                    .indent = cindent, .is_ordered = ordered_label_length > 0
-                }));
-
-                while (
-                       parse_md_elem(md, &list->items, cindent, list->indent, box_depth)
-                    && arrayLast(list->items)->type != ELEM_BREAK
-                    && arrayLast(list->items)->loc.c > list->indent
-                    && readline(md)
+                printf("[LIST] Creating new list\n");
+                g_elem *new_list = arrayAdd(
+                    *arrayLast(md->contexts)->items, // We start a new list in the CURRENT context, not necessarily the `ctx`
+                    ((g_elem) {
+                        .loc = md->loc, .indent = md->indent, .type = ELEM_LIST,
+                        .li = (g_list) {
+                            .is_ordered = ordered_label_length > 0
+                        }
+                    })
                 );
-                
-                int depth = arrayLast(list->items)->type == ELEM_BREAK ? 
-                            (int)arrayLast(list->items)->loc.c : -1;
-                            
-                if (arrayLast(list->items)->type == ELEM_BREAK) list->items.count--;
-                
-                arrayAdd(*elements, g_elem_(ELEM_LIST, list_loc, .li = *list));
-                md->list_stack.count--;
-                
-                if (md->list_stack.count && depth < arrayLast(md->list_stack)->indent) 
-                {
-                    // printf("[LIST] Propagate \"break\"\n");
-                    file_loc loc = md->loc;
-                    loc.c = depth;
-                    arrayAdd(*elements, g_elem_(ELEM_BREAK, loc));
-                }
-                
-                return true;
+
+                ctx = arrayAdd(md->contexts, ((md_context) {
+                    .type   = MD_CONTEXT_LIST,
+                    .indent = md->indent,
+                    .items  = &new_list->li.items
+                }));
+            }
+            else if (ctx->indent > md->indent) {
+                printf("[LIST] Terminating list\n");
+                do {
+                    md->contexts.count = aindex_in(ctx, md->contexts);
+                    ctx = find_md_context(md, MD_CONTEXT_LIST);
+                } while (ctx && ctx->indent > md->indent);
+                assert(ctx != NULL);
             }
 
-            // printf("[LIST] Adding new item\n");
+            printf("[LIST] Adding new item (indent=%d)\n", md->indent);
             
-            arrayAdd(*elements, g_elem_(ELEM_LIST_ITEM, md->loc, .li.is_ordered = ordered_label_length > 0));
-            
+            g_elem *new_list_item = arrayAdd(*ctx->items, ((g_elem) {
+                .loc = md->loc, .indent = md->indent, .type = ELEM_LIST_ITEM
+            }));
+
+            if (arrayLast(md->contexts)->type == MD_CONTEXT_LIST_ITEM) md->contexts.count--;
+            arrayAdd(md->contexts, ((md_context) {
+                .type   = MD_CONTEXT_LIST_ITEM,
+                .indent = md->indent,
+                .items  = &new_list_item->li_it.items
+            }));
+
             md_mv(md, ordered_label_length);
             do md_mv(md, 1); while (md_at(md) == ' ');
-            return parse_md_elem(md, &arrayLast(md->list_stack)->items, cindent, arrayLast(md->list_stack)->indent, box_depth);
+            return parse_md_elem(md, box_depth, parse_depth + 1);
         } break;
 
+        // #if 0
         case '>':
         {
-            g_elem box = g_elem_(ELEM_BOX, md->loc);
-            md_mv(md, 1);
+            md_context *ctx = find_md_context(md, MD_CONTEXT_BOX);
+            if (!ctx || box_depth > 0)
+            {
+                printf("[BOX] Creating new box\n");
+                g_elem *new_box = arrayAdd(
+                    *arrayLast(md->contexts)->items,
+                    ((g_elem) { .loc = md->loc, .indent = md->indent, .type = ELEM_BOX })
+                );
 
-            if (box_depth) {
-                parse_md_elem(md, elements, cindent, pindent, box_depth);
-                if (md->line[0] != '>') arrayAdd(*elements, g_elem_(ELEM_BREAK, md->loc));
-                return true;
+                ctx = arrayAdd(md->contexts, ((md_context) {
+                    .type   = MD_CONTEXT_BOX,
+                    .indent = md->indent,
+                    .items  = &new_box->bx.items
+                }));
             }
-            // usize line_box_depth = md->line[0] == '>';
-            // for (char *p = md->line; *p && *(p + 1); ++p) line_box_depth += (*p == ' ' && *(p + 1) == '>');
-            // info(md->loc, "cur_box_depth=%zu, box_depth=%zu", line_box_depth);
-            
-            while (md_at(md) == ' ') md_mv(md, 1);
-            while (
-                   parse_md_elem(md, &box.bx.items, cindent, pindent, 1)
-                && arrayLast(box.bx.items)->type != ELEM_BREAK
-                && readline(md)
-            );
-            
-            int depth = arrayLast(box.bx.items)->type == ELEM_BREAK ? 
-                   (int)arrayLast(box.bx.items)->loc.c : -1;
-                        
-            if (arrayLast(box.bx.items)->type == ELEM_BREAK) box.bx.items.count--;
-            
-            arrayAdd(*elements, box);
-            
-            file_loc loc = md->loc;
-            loc.c = depth;
-            arrayAdd(*elements, g_elem_(ELEM_BREAK, loc));
+
+            md_mv(md, 1);
+            do md_mv(md, 1); while (md_at(md) == ' ');
+            return parse_md_elem(md, box_depth + 1, parse_depth + 1);
         } break;
+        // #endif
 
         default: TEXT: {
             const bool concat = elements->count && arrayLast(*elements)->type == ELEM_PARAGRAPH;
             
-            g_elem paragraph = g_elem_(ELEM_PARAGRAPH, md->loc);
+            g_elem paragraph = g_elem_(ELEM_PARAGRAPH, md->loc, md->indent);
             if (concat) paragraph.pa = arrayLast(*elements)->pa;
 
             g_inline_type t_type = 0;
-            while (md_at(md))
+            do
             {
                 g_inline t = parse_md_inline(md, &t_type);
                 if (t.type == INLINE_NEWL) arrayAdd(paragraph.pa.text, t);
@@ -478,6 +507,7 @@ bool parse_md_elem(md_reader *md, array(g_elem) *elements, int cindent, int pind
                 }
                 else arrayAdd(paragraph.pa.text, t);
             }
+            while (md_at(md));
 
             if (concat) arrayLast(*elements)->pa = paragraph.pa;
             else arrayAdd(*elements, paragraph);
@@ -501,17 +531,21 @@ md_tree parse_md(const char *source_path)
     if (!f) SL_terminate(-1, "Failed to open \"%s\"!", source_path);
 
     md_tree ret = {0};
-    md_reader md = { .f = f, .loc = { .source_path = source_path } };
+    md_reader md = { 
+        .f = f, 
+        .loc = { .source_path = source_path }
+    };
+    arrayAdd(md.contexts, ((md_context) { .type = MD_CONTEXT_GLOBAL, .items = &ret.elements }));
 
     if (readline(&md))
     {
         if      (strcmp(md.line, "[FR]") == 0) ret.is_french = true;
         else if (strcmp(md.line, "[EN]") == 0) ret.is_french = false;
-        else                                          md.reuse_line = true;
+        else                                   md.reuse_line = true;
     }
     while (
         readline(&md) &&
-        parse_md_elem(&md, &ret.elements, md.indent, -1, 0)
+        parse_md_elem(&md, 0, 0)
     );
     fclose(f);
 
@@ -571,18 +605,14 @@ void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first, bool dire
         {
             const char uo = elem.li.is_ordered ? 'o' : 'u';
             fprintf(f, "%*s<%cl>\n", (int)depth * 4, "", uo);
-            fprintf(f, "%*s<li>\n", ((int)depth + 1) * 4, "");
-            aforeach(el, elem.li.items)
+            aforeach(it, elem.li.items)
             {
-                if (aindex(el) > 0 && el->type == ELEM_LIST_ITEM) 
-                {
-                    fprintf(f, "%*s</li>\n", ((int)depth + 1) * 4, "");
-                    fprintf(f, "%*s<li>\n", ((int)depth + 1) * 4, "");
-                }
-
-                generate_html_elem(f, depth + 2, *el, false, false);
+                assert(it->type == ELEM_LIST_ITEM);
+                
+                fprintf(f, "%*s<li>\n", ((int)depth + 1) * 4, "");
+                aforeach(el, it->li_it.items) generate_html_elem(f, depth + 2, *el, false, false);
+                fprintf(f, "%*s</li>\n", ((int)depth + 1) * 4, "");
             }
-            fprintf(f, "%*s</li>\n", ((int)depth + 1) * 4, "");
             fprintf(f, "%*s</%cl>\n", (int)depth * 4, "", uo);
         } break;
 
@@ -824,8 +854,13 @@ int main(int argc, char **argv)
         if (!name) SL_terminate(-1, "Expected blog name!");
     
         md_tree md = parse_md(strf(ROOT"blogs/%s/%s.md", name, name));
+        SBS_logI("PARSED MARKDOWN");
         generate_blog(name, md);
-        if (argc > 3 && strcmp(argv[3], "publish") == 0) update_list(ROOT"blog.list", list_entry_(name, time(NULL), md.is_french, md.title, md.description));
+        SBS_logI("GENERATED BLOG");
+        if (argc > 3 && strcmp(argv[3], "publish") == 0) {
+            update_list(ROOT"blog.list", list_entry_(name, time(NULL), md.is_french, md.title, md.description));
+            SBS_logI("UPDATED LIST");
+        }
     }
     else if (argc > 1 && strcmp(argv[1], "project") == 0)
     {
@@ -841,5 +876,6 @@ int main(int argc, char **argv)
         SL_terminate(-1, "Expected generation command (\"blog\" or \"project\")!");
     }
 
+    SBS_logI("DONE");
     return 0;
 }

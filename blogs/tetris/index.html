@@ -38,30 +38,61 @@
             <ol>
                 <li>
                     <p>
-                        A common base for terminal-rendered applications<br/>
-                        1.1 How to draw using a terminal<br/>
-                        1.2 How to query user inputs<br/>                        
+                        <a class="text-accent underline" href="#1">A common base for terminal-rendered applications</a>
+                    </p>
+                    <ol>
+                        <li>
+                            <p>
+                                <a class="text-accent underline" href="#1.1">How to draw using a terminal</a>
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                <a class="text-accent underline" href="#1.2">How to query user inputs</a>
+                            </p>
+                        </li>
+                    </ol>
+                </li>
+                <li>
+                    <p>
+                        <a class="text-accent underline" href="#2">Architecture of the project</a>
                     </p>
                 </li>
                 <li>
                     <p>
-                        Architecture of the project<br/>
-                        
+                        <a class="text-accent underline" href="#3">Practical example: The game of Tetris</a>
                     </p>
+                    <ol>
+                        <li>
+                            <p>
+                                <a class="text-accent underline" href="#3.1">Defining the scope for the gameplay</a>
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                <a class="text-accent underline" href="#3.2">Representing the game state</a>
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                <a class="text-accent underline" href="#3.3">Defining the logic</a>
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                <a class="text-accent underline" href="#3.4">Rendering the game</a>
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                <a class="text-accent underline" href="#3.5">Combining everything</a>
+                            </p>
+                        </li>
+                    </ol>
                 </li>
                 <li>
                     <p>
-                        Practical example: The game of Tetris<br/>
-                        3.1 Defining the scope for the gameplay<br/>
-                        3.2 Representing the game state<br/>
-                        3.3 Defining the logic<br/>
-                        3.4 Rendering the game<br/>
-                        3.5 Combining everything
-                    </p>
-                </li>
-                <li>
-                    <p>
-                        Conclusion
+                        <a class="text-accent underline" href="#4">Conclusion</a>
                     </p>
                 </li>
             </ol>
@@ -555,7 +586,7 @@ int main(int argc, char **argv)
             <hgroup>
                 <h3>/!\ WORK IN PROGRESS /!\</h3>
                 <p>
-                     This section will continue to be worked on
+                    This section will continue to be worked on
                 </p>
             </hgroup>
         </section>
@@ -1233,8 +1264,6 @@ void wait_enter()
                     <pre class="code-box"><code class="language-c">printf("\033[2J"); // Clear screen
 reset_game();</code></pre>
                 </li>
-            <!-- </ol>
-            <ol> -->
                 <li>
                     <p>
                         Running the <i>game loop</i> until the game is over:
@@ -1259,8 +1288,6 @@ reset_game();</code></pre>
     // frame time is spent on processing
 }</code></pre>
                 </li>
-            <!-- </ol>
-            <ol> -->
                 <li>
                     <p>
                         When the game is over, displaying <code class="inline">"GAME OVER"</code> and waitting for the user to press <i>enter</i> to loop back to the title-screen.
@@ -1435,7 +1462,7 @@ void save_highscore()
             <hgroup>
                 <h3>/!\ WORK IN PROGRESS /!\</h3>
                 <p>
-                     This page will continue to be worked on
+                    This page will continue to be worked on
                 </p>
             </hgroup>
         </section>

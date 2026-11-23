@@ -5,9 +5,19 @@ It will be used for further testing my page generator
 
 
 ## TODO:
-- Add `<img src="...">` support
 - Generalize `>` analysis (for nested boxes)
-- Allow for text formatting withing a link label `[here](...)`
-- Add *creation date* field in lists to be able to sort by date of publication or by most recent
+- Allow for text formatting within a link label `[here](...)`
+- Added nested lists
 
 ![rocku!](rocku.png)
+
+- l0
+- l1
+    - l1.1
+    - 11.2
+    - l1.3
+- l2
+
+> box
+>
+> end

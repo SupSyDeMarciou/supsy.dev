@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../style.css" type="text/css"/>
+    <link rel="stylesheet" href="../../external/prism.css"/>
+    <!-- <link rel="icon" href="icons/supsy.png"> -->
+    <title>supsy.dev - Project - SupSyLibraries</title>
+    <!-- <FONT> -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:ital,wght@0,293;1,293&display=swap" rel="stylesheet">
+    <!-- </FONT> -->
+    <base href="">
+</head>
+<body>
+    <main>
+        <header>
+            <p><a href="../../index.html">SupSy<span class="text-accent">.dev</span></a></p>
+            <p class="no-select">|</p>
+            <p><a href="../../blog.html">Blog</a></p>
+            <p class="no-select">|</p>
+            <p><a href="../../projects.html">Projects</a></p>
+        </header>
+        <section>
+            <h1><span class="anchor" id="SupSyLibraries"></span>SupSyLibraries <a class="text-dim" href="#SupSyLibraries">#</a></h1>
+            <p>
+                This C library acts as a bundle of multiple useful libraries for helping with linear arithmetics, generic structures and others.
+            </p>
+            <p>
+                You can find the repo here: <a class="text-accent underline" href="https://github.com/SupSyDeMarciou/SL">SupSyLibraries</a>.
+            </p>
+        </section>
+        <section>
+            <h1><span class="anchor" id="Dependencies"></span>Dependencies <a class="text-dim" href="#Dependencies">#</a></h1>
+            <p>
+                This library is entirely written by myself, no dependencies to be found !
+            </p>
+            <p>
+                However, depending on the C standard and wether POSIX is used, some functions may not be defined and some macros may not be used. Indeed, a very limited number of functions make use of <code class="inline">_Generic</code> <i>(a C23 extension)</i>, <code class="inline">nanosleep</code> <i>(a POSIX standard function)</i> and some others.
+            </p>
+            <p>
+                The library has been compiled using <b>Cland</b> and <b>GCC</b> in projects using <code class="inline">-std=c99</code>, <code class="inline">-std=c11</code>, <code class="inline">-std=c23</code>, <code class="inline">-std=gnu99</code> and <code class="inline">-std=gnu23</code>. 
+            </p>
+        </section>
+        <section>
+            <h1><span class="anchor" id="How"></span>How to use <a class="text-dim" href="#How">#</a></h1>
+            <p>
+                This library is header only in the vain of the <i>STB libraries</i>. Therefore, you can simply do the following :
+            </p>
+            <pre class="code-box"><code class="language-c">#define SL_IMPLEMENTATION       // Define this marco to enable the definitions of every function in the SL. Define it only once in your project to avoid redefinition conflicts.
+#define SL_STRIP_PREFIX         // Define this macro to remove almost every `SL_` or `sl_` prefix (these prefixes act like a namespace)
+
+#include "SL/sl.h"              // Includes everything in the SL as recursive includes to every header
+// or
+#include "SL/sl_all.h"          // Includes everything in the SL from this single header (which is a concatenation of every file in the library generated automaticaly)
+// or
+#include "SL/struct/array.h"    // Only includes the relevant headers to make this header work.</code></pre>
+            <hgroup>
+                <h3>/!\ Be careful, some files are proceduraly generated and can get quite big so they might slow down your text editor if you open them (particularily <code class="inline">sl_all.h</code>, <code class="inline">vector.h</code> and <code class="inline">matrix.h</code>) /!\</h3>
+            </hgroup>
+            <hgroup>
+                <h3>/!\ TODO: CONTINUE /!\</h3>
+            </hgroup>
+        </section>
+        <footer><p>Vlad MUNTEANU 2026 - All rights reserved.</p></footer>
+        <script src="../../external/prism.js"></script>
+    </main>
+</body>
+</html>
