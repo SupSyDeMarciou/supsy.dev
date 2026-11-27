@@ -1,16 +1,16 @@
+sl
+26/10/2026
+27/11/2026
+en
+SupSyLibraries
+This C library acts as a bundle of multiple useful libraries for helping with linear arithmetics, generic structures and others.
+
 ew32
 26/10/2026
 23/11/2026
 en
 EasyWIN32
 An interface for the Windows API to create simple CPU-rendered applications.
-
-sl
-26/10/2026
-23/11/2026
-en
-SupSyLibraries
-This C library acts as a bundle of multiple useful libraries for helping with linear arithmetics, generic structures and others.
 
 test
 28/10/2026

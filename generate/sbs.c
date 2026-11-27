@@ -42,6 +42,21 @@ typedef enum g_element_type
     ELEM_BOX,
 } g_element_type;
 
+const char *elemTypeAsString(g_element_type type)
+{
+    switch (type) {
+        case ELEM_NONE:      return "ELEM_NONE";
+        case ELEM_BREAK:     return "ELEM_BREAK";
+        case ELEM_TEXT:      return "ELEM_TEXT";
+        case ELEM_PARAGRAPH: return "ELEM_PARAGRAPH";
+        case ELEM_TITLE:     return "ELEM_TITLE";
+        case ELEM_LIST:      return "ELEM_LIST";
+        case ELEM_LIST_ITEM: return "ELEM_LIST_ITEM";
+        case ELEM_CODE:      return "ELEM_CODE";
+        case ELEM_BOX:       return "ELEM_BOX";
+    }
+}
+
 typedef struct g_inline    g_inline;
 typedef struct g_list      g_list;
 typedef struct g_list_item g_list_item;
@@ -406,7 +421,7 @@ bool parse_md_elem(md_reader *md, int box_depth, int parse_depth)
                     md->contexts.count = aindex_in(ctx, md->contexts);
                     ctx = find_md_context(md, MD_CONTEXT_LIST);
                 } while (ctx && ctx->indent > md->indent);
-                assert(ctx != NULL);
+                if (ctx == NULL) error(md->loc, "Expected to be within \"list\" context!");
             }
 
             printf("[LIST] Adding new item (indent=%d)\n", md->indent);
@@ -528,7 +543,7 @@ typedef struct md_tree
 md_tree parse_md(const char *source_path)
 {
     FILE *f = fopen(source_path, "r");
-    if (!f) SL_terminate(-1, "Failed to open \"%s\"!", source_path);
+    if (!f) error((file_loc){.source_path=source_path}, "Failed to open \"%s\"!", source_path);
 
     md_tree ret = {0};
     md_reader md = { 
@@ -550,12 +565,12 @@ md_tree parse_md(const char *source_path)
     fclose(f);
 
     array(char) tmp = {0};
-    assert(ret.elements.data[0].type == ELEM_TITLE && "FIRST MUST BE A TITLE");
+    if (ret.elements.data[0].type != ELEM_TITLE) error(md.loc, "First element must be a title!");
     aforeach(t, ret.elements.data[0].ti.text) arrayAdd_range(tmp, strlen(t->str), t->str);
     ret.title = strndup(tmp.data, tmp.count);
-    
+
     tmp.count = 0;
-    assert(ret.elements.data[1].type == ELEM_PARAGRAPH && "SECOND MUST BE A PARAGRAPH");
+    if (ret.elements.data[1].type != ELEM_PARAGRAPH) error(md.loc, "Second element must be a paragraph!");
     aforeach(t, ret.elements.data[1].pa.text) arrayAdd_range(tmp, strlen(t->str), t->str);
     ret.description = strndup(tmp.data, tmp.count);
     
@@ -607,7 +622,7 @@ void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first, bool dire
             fprintf(f, "%*s<%cl>\n", (int)depth * 4, "", uo);
             aforeach(it, elem.li.items)
             {
-                assert(it->type == ELEM_LIST_ITEM);
+                if (it->type != ELEM_LIST_ITEM) error(it->loc, "Expected \"list item\", got %s", elemTypeAsString(it->type));
                 
                 fprintf(f, "%*s<li>\n", ((int)depth + 1) * 4, "");
                 aforeach(el, it->li_it.items) generate_html_elem(f, depth + 2, *el, false, false);
@@ -686,6 +701,30 @@ void generate_html_elem(FILE *f, usize depth, g_elem elem, bool first, bool dire
         default: break;
     }
 }
+void generate_html(const char *name, const char *type, md_tree md)
+{
+    char *default_html = readEntireFile(tmpf(ROOT"generate/default_%s.html", type), NULL);
+    if (!default_html) error((file_loc){.source_path=tmpf(ROOT"generate/default_%s.html", type)}, "Failed to read \"%s\"!", tmpf(ROOT"generate/default_%s.html", type));
+
+    char *insert = strstr(default_html, "<!-- <INSERT> -->");
+
+    int indent = 0;
+    while (insert - indent >= default_html && insert[-indent] != '\n') ++indent;
+    insert[1 - indent] = '\0';
+
+    const char *first_half  = default_html;
+    const char *second_half = insert + sizeof("<!-- <INSERT> -->"); 
+
+    const char *path = SBS_tmpf(ROOT"%ss/%s/index.html", type, name);
+    FILE *f = fopen(path, "w");
+    if (!f) error((file_loc){.source_path=path}, "Failed to open \"%s\"!", path);
+
+    fprintf(f, first_half, md.is_french ? "fr" : "en", md.title);
+    aforeach(el, md.elements) generate_html_elem(f, indent / 4, *el, aindex(el) == 0, true);
+    fputs(second_half, f);
+
+    fclose(f);
+}
 
 
 
@@ -737,7 +776,7 @@ array(list_entry) load_list(const char *path)
     array(list_entry) ret = {0};
 
     FILE *f = fopen(path, "r");
-    if (!f) SL_terminate(-1, "Failed to open \"%s\"!", path);
+    if (!f) error((file_loc){.source_path=path}, "Failed to open \"%s\"!", path);
     
     char line[2048];
     list_entry entry = {0};
@@ -758,7 +797,7 @@ array(list_entry) load_list(const char *path)
 void save_list(array(list_entry) le, const char *path)
 {
     FILE *f = fopen(path, "w");
-    if (!f) SL_terminate(-1, "Failed to open \"%s\"!", path);
+    if (!f) error((file_loc){.source_path=path}, "Failed to open \"%s\"!", path);
 
     // arraySort(le, list_entry_cmp_inv);
     arraySort(le, list_entry_cmp_inv_mod);
@@ -793,89 +832,34 @@ void update_list(const char *path, list_entry new_entry)
     if (new) arrayAdd(entries, new_entry);
     save_list(entries, path);
 }
-
-
-
-
-
-void generate_blog(const char *name, md_tree md)
-{
-    char *default_blog = readEntireFile(ROOT"generate/default_blog.html", NULL);
-    char *insert = strstr(default_blog, "<!-- <INSERT> -->");
-
-    int indent = 0;
-    while (insert - indent >= default_blog && insert[-indent] != '\n') ++indent;
-    insert[1 - indent] = '\0';
-
-    const char *first_half  = default_blog;
-    const char *second_half = insert + sizeof("<!-- <INSERT> -->"); 
-
-    const char *path = SBS_tmpf(ROOT"blogs/%s/index.html", name);
-    FILE *f = fopen(path, "w");
-    if (!f) SL_terminate(-1, "Failed to open \"%s\"!", path);
-    
-    fprintf(f, first_half, md.is_french ? "fr" : "en", md.title);
-    aforeach(el, md.elements) generate_html_elem(f, indent / 4, *el, aindex(el) == 0, true);
-    fputs(second_half, f);
-
-    fclose(f);
-}
-void generate_project(const char *name, md_tree md)
-{
-    char *default_project = readEntireFile(ROOT"generate/default_project.html", NULL);
-    char *insert = strstr(default_project, "<!-- <INSERT> -->");
-
-    int indent = 0;
-    while (insert - indent >= default_project && insert[-indent] != '\n') ++indent;
-    insert[1 - indent] = '\0';
-
-    const char *first_half  = default_project;
-    const char *second_half = insert + sizeof("<!-- <INSERT> -->"); 
-
-    const char *path = SBS_tmpf(ROOT"projects/%s/index.html", name);
-    FILE *f = fopen(path, "w");
-    if (!f) SL_terminate(-1, "Failed to open \"%s\"!", path);
-    
-    fprintf(f, first_half, md.is_french ? "fr" : "en", md.title);
-    aforeach(el, md.elements) generate_html_elem(f, indent / 4, *el, aindex(el) == 0, true);
-    fputs(second_half, f);
-
-    fclose(f);
-}
 #pragma endregion GENERATE
 
 int main(int argc, char **argv)
 {
     SBS_rebuild(argc, argv, "-I"ROOT"../SupSyLibraries/include/");
 
-    if (argc > 1 && strcmp(argv[1], "blog") == 0)
-    {
-        const char *name = argc > 2 ? argv[2] : NULL;
-        if (!name) SL_terminate(-1, "Expected blog name!");
-    
-        md_tree md = parse_md(strf(ROOT"blogs/%s/%s.md", name, name));
-        SBS_logI("PARSED MARKDOWN");
-        generate_blog(name, md);
-        SBS_logI("GENERATED BLOG");
-        if (argc > 3 && strcmp(argv[3], "publish") == 0) {
-            update_list(ROOT"blog.list", list_entry_(name, time(NULL), md.is_french, md.title, md.description));
-            SBS_logI("UPDATED LIST");
-        }
-    }
-    else if (argc > 1 && strcmp(argv[1], "project") == 0)
-    {
-        const char *name = argc > 2 ? argv[2] : NULL;
-        if (!name) SL_terminate(-1, "Expected project name!");
-    
-        md_tree md = parse_md(strf(ROOT"projects/%s/%s.md", name, name));
-        generate_project(name, md);
-        if (argc > 3 && strcmp(argv[3], "publish") == 0) update_list(ROOT"project.list", list_entry_(name, time(NULL), md.is_french, md.title, md.description));
-    }
+    const char *type = argv[1];
+    const char *name = NULL;
+    if (argc > 1 && (strcmp(type, "blog") == 0 || strcmp(type, "project") == 0) && argc > 2) name = argv[2];
     else 
     {
-        SL_terminate(-1, "Expected generation command (\"blog\" or \"project\")!");
+        SBS_logE("Expected either \"blog\" or \"project\" command followed by a name!");
+        goto ERROR;
+    }
+
+    md_tree md = parse_md(strf(ROOT"%ss/%s/%s.md", type, name, name));
+    SBS_logI("PARSED MARKDOWN");
+    generate_html(name, type, md);
+    SBS_logI("GENERATED %s", strupper(tmpf(type)));
+    if (argc > 3 && strcmp(argv[3], "publish") == 0) {
+        update_list(tmpf(ROOT"%s.list", type), list_entry_(name, time(NULL), md.is_french, md.title, md.description));
+        SBS_logI("UPDATED LIST");
     }
 
     SBS_logI("DONE");
     return 0;
+
+ERROR:
+    SBS_logI("Usage: %s blog|project \"blog_or_project_name\" [publish]", argv[0]);
+    exit(1);
 }

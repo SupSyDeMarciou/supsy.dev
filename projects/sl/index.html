@@ -60,6 +60,789 @@
             <hgroup>
                 <h3>/!\ Be careful, some files are proceduraly generated and can get quite big so they might slow down your text editor if you open them (particularily <code class="inline">sl_all.h</code>, <code class="inline">vector.h</code> and <code class="inline">matrix.h</code>) /!\</h3>
             </hgroup>
+        </section>
+        <section>
+            <h1><span class="anchor" id="Structure"></span>Structure of the library <a class="text-dim" href="#Structure">#</a></h1>
+            <h2><span class="anchor" id="Files"></span>Files <a class="text-dim" href="#Files">#</a></h2>
+            <p>
+                The library is divided into three main modules :
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        <b>Math</b>: structures and functions which are useful for linear algebra, 3D graphics and basic arithmetic. It contains <code class="inline">math.h</code>, <code class="inline">vector.h</code>, <code class="inline">quaternion.h</code>, <code class="inline">matrix.h</code>, <code class="inline">block_matrix.h</code>, <code class="inline">noise.h</code> and <code class="inline">algorithm.h</code>
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <b>Struct</b>: useful structures, some of which are <i>generic</i> and can thus be reused with any user-defined type. It contains <code class="inline">allocator.h</code>, <code class="inline">array.h</code>, <code class="inline">list.h</code>, <code class="inline">dict.h</code>, <code class="inline">arena.h</code> and <code class="inline">string.h</code>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <b>Misc</b>: miscellaneous utility files which are only bundled together because they didn't fit the above two categories. It contains <code class="inline">async.h</code>, <code class="inline">io.h</code>, <code class="inline">log.h</code>, <code class="inline">tui.h</code>
+                    </p>
+                </li>
+            </ul>
+            <p>
+                Additionnaly <code class="inline">base.h</code> defines shared definitions accross most headers.
+            </p>
+            <h2><span class="anchor" id="Synthax"></span>Synthax overview <a class="text-dim" href="#Synthax">#</a></h2>
+            <p>
+                Everything in the library is prefixed by either <code class="inline">SL_</code> (functions and macros) or <code class="inline">sl_</code> (types). This prefix, serving as a namespace, can be removed by defining <code class="inline">SL_STRIP_PREFIX</code> before including the library. This system is heavily inspired by Tsoding's <i>nob.h</i>.
+            </p>
+            <p>
+                The code base is written with the following synthax :
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        Types are <code class="inline">snake_case</code>
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Constants and global static variables are <code class="inline">SNAKE_CASE</code>
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Functions are by default <code class="inline">camelCase</code>, and their "<i>overloads</i>" are separated using an underscore (ex: <code class="inline">functionName_overload(...)</code>). This allows me to synthaxically group similar functions together. 
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Functions operating on a specific type are prefixed by the type name (example: <code class="inline">fv2add(...)</code> does an addition (<code class="inline">add</code>) between two 2D vectors of floats (<code class="inline">fv2</code>))
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Some types have contructors which are either called <code class="inline">type {type}_(...)</code> (may have an overload letter in place of the <code class="inline">_</code>) or <code class="inline">type {typeButInCamelCase}Create(...)</code> depending on wether the initialization is done at compile-time or during the run-time.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Declarative macros used to define new compound types like dynamic arrays or linked lists are called <code class="inline">SL_DEF_{compound_type}(...)</code>.
+                    </p>
+                </li>
+            </ul>
+            <p>
+                In addition, some functions and macros are only intended to be used by the <b>SL</b> and are thus prefixed with a double underscore (<code class="inline">__SL_...</code>) to signify this. These don't get their prefix removed by defining <code class="inline">SL_STRIP_PREFIX</code>.<br/>
+                
+            </p>
+        </section>
+        <section>
+            <h1><span class="anchor" id="Content"></span>Content overview <a class="text-dim" href="#Content">#</a></h1>
+            <h3><span class="anchor" id="base.h"></span><i>base.h</i> <a class="text-dim" href="#base.h">#</a></h3>
+            <p>
+                This file serves as the lowest level include. It includes the standard library headers and defines constructs shared by the other headers.
+            </p>
+            <p>
+                It defines many aliases to builtin types (<code class="inline">int{n}_t -> i{n}</code>, <code class="inline">uint{n}_t -> u{n}</code>, <code class="inline">float -> f32</code>, <code class="inline">double -> f64</code>, <i>etc...</i>), and their pointer types (the generic structures like dynamic arrays heavely rely on having <i>typedef-ed</i> names so this is a compromise to have). It defines :
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        <code class="inline">usize</code>, <code class="inline">ssize</code>: aliases for <code class="inline">size_t</code> and <code class="inline">ssize_t</code>. 
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">i8</code>, <code class="inline">i16</code>, <code class="inline">i32</code>, <code class="inline">i64</code>, <code class="inline">u8</code>, <code class="inline">u16</code>, <code class="inline">u32</code>, <code class="inline">u64</code>, <code class="inline">uint</code>: aliases for builtin sized integer types.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">f16</code>, <code class="inline">f32</code>, <code class="inline">f64</code>, <code class="inline">f128</code>: aliases for floating-point number types.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">ch8</code>, <code class="inline">ch16</code>, <code class="inline">ch32</code>: aliases for sized character types.
+                    </p>
+                </li>
+            </ul>
+            <p>
+                It also defines the error management constructs (<code class="inline">SL_ERROR</code>, <code class="inline">SL_strerr</code>) and memory-related constructs like the macro <code class="inline">SL_new(...)</code> which allocates and fills the allocation with its input or <code class="inline">SL_memclone</code> (on which <code class="inline">SL_new</code> is based).
+            </p>
+            <h2><span class="anchor" id="Math"></span><i>Math</i> <a class="text-dim" href="#Math">#</a></h2>
+            <p>
+                The math module defines vector, matrice and quaternion structures and operations, as well as utilities for basic number manipulation and noise generation.
+            </p>
+            <p>
+                A convention is used troughout the module :
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        <code class="inline">s</code> and <code class="inline">v</code> suffix: overload of a binary operation (in the send <i>"operations with two inputs"</i>) on which the second operand is now either a scalar (<code class="inline">s</code>) or a vector (<code class="inline">v</code>).
+                    </p>
+                    <hgroup>
+                        <p>
+                            Example: <code class="inline">fm2x2mul</code> does matrix multiplication of two 2x2 float matrices, whereas <code class="inline">fv2muls</code> scales the matrix by a float and <code class="inline">fv2mulv</code> does matrix-vector multiplication with right operand being a 2D vector of floats.
+                        </p>
+                    </hgroup>
+                </li>
+            </ul>
+            <ul>
+                <li>
+                    <p>
+                        <code class="inline">S</code>, <code class="inline">M</code> and <code class="inline">T</code> prefix or suffix : the first or second operand is scaled (<code class="inline">S</code>), multiplied (<code class="inline">M</code>) and/or transposed (<code class="inline">T</code>).<br/>
+                        
+                    </p>
+                    <hgroup>
+                        <p>
+                            Example: <code class="inline">iv3sub(lhs, rhs)</code> does <code class="inline">lhs - rhs</code>, whereas <code class="inline">iv3subS(lhs, rhs, s)</code> does <code class="inline">lhs * s - rhs</code>, <code class="inline">iv3subSM(lhs, rhs, s, m)</code> does <code class="inline">lhs - rhs * s * m</code> (with <code class="inline">m</code> a <code class="inline">iv3</code>) and <code class="inline">iv3Ssub(lhs, s, rhs)</code> does <code class="inline">lhs * s - rhs</code>.
+                        </p>
+                    </hgroup>
+                </li>
+            </ul>
+            <ul>
+                <li>
+                    <p>
+                        <code class="inline">_u</code> suffix : at least one operand is assumed to be of unit length (specified within the function's description. Used to reduce redundant normalisation operations).
+                    </p>
+                </li>
+            </ul>
+            <h3><span class="anchor" id="math.h"></span><i>math.h</i> <a class="text-dim" href="#math.h">#</a></h3>
+            <p>
+                This file defines constants and operations on core mathematical C types like <code class="inline">u32</code> and <code class="inline">double</code> (abreviated as <code class="inline">d</code>).
+            </p>
+            <p>
+                It defines:
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        Constants: 
+                    </p>
+                    <ul>
+                        <li>
+                            <p>
+                                Mathematical constants: <code class="inline">PI</code>, <code class="inline">TAU</code> <i>(2 pi)</i>, <code class="inline">E</code>, <code class="inline">PHI</code> <i>(golden ratio)</i>.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Conversion constants: <code class="inline">DEG_TO_RAD</code> <i>(conversion from degrees to radians)</i>, <code class="inline">RAD_TO_DEG</code> <i>(conversion from radians to degrees)</i>.
+                            </p>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <ul>
+                <li>
+                    <p>
+                        Operations:
+                    </p>
+                    <ul>
+                        <li>
+                            <p>
+                                Min and max: <code class="inline">umin</code>, <code class="inline">u64min</code>, <code class="inline">imin</code>, <code class="inline">i64min</code>, <code class="inline">fmin</code>, <code class="inline">dmin</code>, <code class="inline">umax</code>, <code class="inline">u64max</code>, <code class="inline">imax</code>, <code class="inline">i64max</code>, <code class="inline">fmax</code>, <code class="inline">dmax</code>.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Sign: <code class="inline">isign</code>, <code class="inline">i64sign</code>, <code class="inline">fsign</code>, <code class="inline">dsign</code>.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Bit reinterpretation: <code class="inline">inplaceU32ToFloat</code>, <code class="inline">inplaceFloatToU32</code>, <code class="inline">inplaceU64ToDouble</code>, <code class="inline">inplaceDoubleToU64</code>, <code class="inline">inplaceU32ToFloat01</code> <i>(only uses bits in the mantissa to keep output normalized)</i>, <code class="inline">inplaceU64ToDouble01</code>.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Random: <code class="inline">u32hash_PCG</code>, <code class="inline">u32srand</code>, <code class="inline">u32rand</code>, <code class="inline">u32rand_in</code>, <code class="inline">frand</code>, <code class="inline">drand</code>, <code class="inline">frand_in</code>, <code class="inline">drand_in</code>.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Stepping (rounding): <code class="inline">fstep</code>, <code class="inline">dstep</code>.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Linear interpolation: <code class="inline">flerp</code>, <code class="inline">dlerp</code>.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Clamping: <code class="inline">fclamp</code>, <code class="inline">dclamp</code>.
+                            </p>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <h3><span class="anchor" id="vector.h"></span><i>vector.h</i> <a class="text-dim" href="#vector.h">#</a></h3>
+            <p>
+                This file defines vectors of <i>2</i>, <i>3</i>, <i>4</i> and an <i>arbitrary number</i> of components for the types <code class="inline">bool</code> (<code class="inline">b</code>), <code class="inline">i8</code>, <code class="inline">u8</code>, <code class="inline">i16</code>, <code class="inline">u16</code>, <code class="inline">i32</code> (or <code class="inline">i</code>), <code class="inline">u32</code> (or <code class="inline">u</code>), <code class="inline">i64</code> (or <code class="inline">li</code>), <code class="inline">u64</code> (or <code class="inline">lu</code>), <code class="inline">float</code> (<code class="inline">f</code>) and <code class="inline">double</code> (<code class="inline">d</code>). 
+            </p>
+            <hgroup>
+                <p>
+                    For example:
+                </p>
+                <ul>
+                    <li>
+                        <p>
+                            <code class="inline">fv2</code> is a vector of two floats.
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <code class="inline">bv4</code> is a vector of four booleans.
+                        </p>
+                    </li>
+                    <li>
+                        <p>
+                            <code class="inline">i64v</code> is a vector of i64 of arbitrary component count.
+                        </p>
+                    </li>
+                </ul>
+            </hgroup>
+            <p>
+                For a vector of type <code class="inline">T</code> and arbitrary dimension, the structure simply is:
+            </p>
+            <pre class="code-box"><code class="language-c">typedef struct {
+    const usize count; 
+    T *data;
+} Tv;</code></pre>
+            <p>
+                For a vector of type <code class="inline">T</code> and dimension 4, the structure is more complex:
+            </p>
+            <pre class="code-box"><code class="language-c">typedef union {
+    T data[4];
+    struct {
+        union { T x, r, u; };
+        union { T y, g, v; };
+        union { T z, b, s; };
+        union { T w, a, t; };
+    };
+    struct {
+        union { T __x0, __r0, __u0; };
+        union { Tv2 yz, gb, vs; };
+        union { T __w0, __a0, __t0; };
+    };
+    struct {
+        union { Tv2 xy, rb, uv; };
+        union { Tv2 zw, ba, st; };
+    };
+    struct {
+        union { Tv3 xyz, rgb, uvs; };
+        union { T __w1, __a1, __t1; };
+    };
+    struct {
+        union { T __x1, __r1, __u1; };
+        union { Tv3 yzw, gba, vst; };
+    };
+} Tv4;</code></pre>
+            <p>
+                The <b><i>SL</i></b> makes heavy use of <code class="inline">union</code> to create aliases in arithmetic types, so that a <code class="inline">fv4</code> may be used as an extended 3D coordinate (<code class="inline">.xyzw</code>), a color (<code class="inline">.rgba</code>) or a 4D UV coordinate (<code class="inline">.uvst</code>). In addition, you can extract sub-vectors from largers ones using this <code class="inline">union</code> trick (<code class="inline">.yz</code> extracts the middle <code class="inline">fv2</code> of a <code class="inline">fv4</code>) which acts as a weak form of GLSL's swizzling.
+            </p>
+            <p>
+                Though vectors are very diverse, they have some common function definitions:
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        Addition and subtraction: <code class="inline">add</code> <i>(addition)</i>, <code class="inline">addS</code>, <code class="inline">addSM</code>, <code class="inline">Sadd</code>, <code class="inline">sub</code> <i>(subtraction)</i>, <code class="inline">subS</code>, <code class="inline">subSM</code>, <code class="inline">Ssub</code>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Component-wise multiplication and division: <code class="inline">mul</code> <i>(multiplication)</i>, <code class="inline">muls</code>, <code class="inline">div</code> <i>(division)</i>, <code class="inline">divs</code>.<br/>
+                        <b>/!\ </b><b><code class="inline">mul</code></b><b> and </b><b><code class="inline">div</code></b><b> are component-wise operations, as vectors don't usually define multiplication and division</b>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Vector arithmetic: <code class="inline">equ</code> <i>(equality)</i>, <code class="inline">dot</code> <i>(dot product)</i>, <code class="inline">len</code> <i>(euclidean length)</i>, <code class="inline">len_sqr</code> <i>(squared euclidean length)</i>, <code class="inline">len_max</code> <i>(infinite length, aka. max component)</i>, <code class="inline">len_manh</code> <i>(manhattan or taxicab length)</i>, <code class="inline">dist</code> <i>(length of the difference of two vectors)</i>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Combination: <code class="inline">min</code> <i>(component-wise minimum)</i>, <code class="inline">max</code> <i>(component-wise maximum)</i>, <code class="inline">mix</code> <i>(addition of vectors, each scaled by a scalar)</i>.<br/>
+                        
+                    </p>
+                </li>
+            </ul>
+            <p>
+                In addition, some functions are only defined for specific vectors types:
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        Non-boolean types: <code class="inline">mod</code> <i>(component-wise modulus)</i>, <code class="inline">mods</code>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Signed types: <code class="inline">neg</code> <i>(negation)</i>, <code class="inline">abs</code> <i>(component-wise absolute value)</i>, <code class="inline">refl{_u}</code> <i>(reflection around axis)</i>, <code class="inline">align{_u}</code> <i>(projection on axis)</i>, <code class="inline">proj{_u}</code> <i>(projection on plane orthogonal to axis)</i>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Real types:
+                    </p>
+                    <ul>
+                        <li>
+                            <p>
+                                Normalisation: <code class="inline">norm</code> <i>(normalization)</i>.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Rounding: <code class="inline">floor</code>, <code class="inline">ceil</code>, <code class="inline">frac</code> <i>(fractional part)</i>. <b>These are component-wise operations</b>.
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                Interpolation: <code class="inline">lerp</code> <i>(linear interpolation)</i>, <code class="inline">serp</code> <i>(spherical interpolation)</i>.
+                            </p>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <p>
+                        Integer and boolean types - binary operations: <code class="inline">and</code>, <code class="inline">or</code>, <code class="inline">xor</code>, <code class="inline">not</code>. <b>These are component-wise operations</b>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Integer types - shifting: <code class="inline">lshft</code> <i>(left shift)</i>, <code class="inline">lshfts</code>, <code class="inline">rshft</code> <i>(right shift)</i>, <code class="inline">rshfts</code>. <b>These are component-wise operations</b>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        2D and 3D signed types - cross product <code class="inline">cross</code> <i>(cross product)</i>. <b>In 2D, returns the </b><b><i>sin</i></b><b> of the angle formed by the two vectors</b>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        2D and 3D real types:
+                    </p>
+                    <ul>
+                        <li>
+                            <p>
+                                <code class="inline">fv2</code>, <code class="inline">dv2</code>: <code class="inline">angle</code> <i>(atan2(v.y, v.x))</i>, <code class="inline">from_angle</code> <i>(get cos/sin pair)</i>, <code class="inline">rot</code> <i>(rotate by angle)</i>, <code class="inline">rot_sc</code> <i>(rotate by sin/cos pair)</i>, <code class="inline">rot_cs</code>, <code class="inline">orth</code> <i>(rotate by +90°)</i>
+                            </p>
+                        </li>
+                        <li>
+                            <p>
+                                <code class="inline">fv3</code>, <code class="inline">dv3</code>: <code class="inline">from_yawPitch</code>
+                            </p>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <h3><span class="anchor" id="quaternion.h"></span><i>quaternion.h</i> <a class="text-dim" href="#quaternion.h">#</a></h3>
+            <p>
+                This file defines quaternions of floats (<code class="inline">fq</code>) and doubles (<code class="inline">dq</code>). These are mainly used for their interesting properties regarding 3D rotations.<br/>
+                Here is the definition of <code class="inline">fq</code> (<code class="inline">dq</code> is equivalent with <code class="inline">double</code> in place of <code class="inline">float</code>): 
+            </p>
+            <pre class="code-box"><code class="language-c">typedef union {
+    float data[4];
+    struct { float a, b, c, d; };
+    struct { float w, x, y, z; };
+    struct { float r; union { fv3 iv; struct { float i, j, k; }; }; };
+    fv4 fv4;
+} fq;</code></pre>
+            <p>
+                <code class="inline">union</code>s are once again used for aliasing as it can be useful to consider quaternions either as a 4D vector or as a real component and an imaginary 3D vector.
+            </p>
+            <p>
+                Quaternions implement the following operations:
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        Common operations: <code class="inline">equ</code>, <code class="inline">add</code>, <code class="inline">sub</code>, <code class="inline">mul</code>, <code class="inline">muls</code>, <code class="inline">div</code>, <code class="inline">len_sqr</code>, <code class="inline">len</code>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Transformations: <code class="inline">neg</code> <i>(negation)</i>, <code class="inline">trsp</code> <i>(transposition)</i>, <code class="inline">inv</code> <i>(inversion)</i>, <code class="inline">norm</code> <i>(normalization)</i>. 
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Exponetial: <code class="inline">exp</code> <i>(</i><b>e</b> <i>raised to the operand)</i>, <code class="inline">ln</code> <i>(natural logarithm of the operand)</i>, <code class="inline">ln_u</code>, <code class="inline">pow</code> <i>(first operand to the power of the second operand)</i>, <code class="inline">pow_u</code>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Rotation: <code class="inline">rot</code> <i>(rotation of a 3D vector)</i>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Interpolation: <code class="inline">serp</code> <i>(spherical interpolation)</i>, <code class="inline">serp_u</code>.
+                    </p>
+                </li>
+            </ul>
+            <p>
+                The following conversions are also defined for quaternions and 3D rotation representations:<br/>
+                
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        Euler angles: <code class="inline">{from|to}_euler</code> <i>(euler angles in roll-pitch-yaw order)</i>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Vectors: <code class="inline">{from|to}_axisAngle</code> <i>(rotation around 3D axis)</i>, <code class="inline">from_fromTo</code> <i>(rotation to align starting vector to destination vector)</i>
+                    </p>
+                </li>
+            </ul>
+            <h3><span class="anchor" id="matrix.h"></span><i>matrix.h</i> <a class="text-dim" href="#matrix.h">#</a></h3>
+            <p>
+                I can't be bothered for now...
+            </p>
+            <h2><span class="anchor" id="Struct"></span><i>Struct</i> <a class="text-dim" href="#Struct">#</a></h2>
+            <p>
+                This module defines generic structure types like dynamic arrays, linked lists and dictionnaries, as well as custom allocators and sized strings.
+            </p>
+            <p>
+                All of the generic types can be configured to use a custom allocator when they need to expand/free their memory footprint. This allocator is generaly assigned by using a type's constructor with suffix <code class="inline">A</code> (example: <code class="inline">listCreateA(...)</code> creates an empty list with custom allocator).
+            </p>
+            <h3><span class="anchor" id="allocator.h"></span><i>allocator.h</i> <a class="text-dim" href="#allocator.h">#</a></h3>
+            <p>
+                This file defines the custom allocator type recognized throughout the <b>SL</b> (<code class="inline">allocator</code>), as well as some macros to incorporate it with the standard library's allocator (refered to as the <code class="inline">std_allocator</code> or simply <code class="inline">NULL</code> in the <b>SL</b>).
+            </p>
+            <p>
+                An allocator can be created using the <code class="inline">allocator_(...)</code> constructor, and is simply a set of functions to use when menipulating memory. These internal functions have signatures equivalent to their <code class="inline">stdlib.h</code> counterparts so they may be used as direct replacements.
+            </p>
+            <p>
+                The following macros are defined to create allocator-independent code: 
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        <code class="inline">aalloc(allocator, size)</code>: allocate a chunk of data.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">azalloc(allocator, size)</code>: allocate a chunk of data which is zero-initialized.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">arealloc(allocator, ptr, newsize)</code>: reallocate an already allocated chunk of data.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">afree(allocator, ptr)</code>: free an allocated chunk of data.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">aclone(allocator, ptr, size)</code>: clone an allocated chunk of data.
+                    </p>
+                </li>
+            </ul>
+            <h3><span class="anchor" id="arena.h"></span><i>arena.h</i> <a class="text-dim" href="#arena.h">#</a></h3>
+            <p>
+                This file defines a simple implementation of an arena allocator using the <b>SL</b> allocator representation. Being a simple arena allocator, it only supports allocating new memory and not freeing parts of memory, however it can grow like a dynamic array by a <code class="inline">page_size</code> (define as a constructor parameter) everytime an allocation does not fit the current sector.
+            </p>
+            <p>
+                The arena implements the following functions:
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        Constructor: <code class="inline">arenaCreate</code>. 
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Dstructor: <code class="inline">arenaDestroy</code>.
+                    </p>
+                </li>
+            </ul>
+            <h3><span class="anchor" id="array.h"></span><i>array.h</i> <a class="text-dim" href="#array.h">#</a></h3>
+            <p>
+                This file defines the dynamic array type (<code class="inline">array(T)</code>) and the slice type (<code class="inline">slice(T)</code>), as well as some functions to manipulate them in a type independent manner. All read-only functions can be used with both arrays or slices indiscriminetly, but memory manipulating functions should only be used with dynamic arrays (as slices don't contain the information necessary for memory resizing).<br/>
+                To define a new array, use the declarative macro:
+            </p>
+            <pre class="code-box"><code class="language-c">// Define an array and a slice of type T
+SL_DEF_ARRAY(T);
+
+// The array type and slice type can now be accessed using
+SL_array(T) array = {0}; // Empty array is a valid array
+SL_array(T) array = SL_arrayCreate(T, ...); // Preallocate capacity
+SL_slice(T) slice = SL_slicev(T, ...); 
+
+// The `SL_array(T)` and `SL_slice(T)` types have the following definitions :
+typedef struct SL_array(T) { 
+    T *data;
+    usize count;
+    usize capa; 
+    sl_allocator *alloc;
+} SL_array(T);
+
+typedef struct SL_slice(T) { 
+    T *data;
+    usize count;
+} SL_slice(T);</code></pre>
+            <p>
+                As you can see, the array keeps track of its capacity and its allocator to efficiently grow (it doubles in size whenever it's full to allow for amortised <i>O(1)</i> insertion).
+            </p>
+            <p>
+                The array implements the following functions:
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        Slice constructors: <code class="inline">slice_</code> <i>(wrap C array)</i>, <code class="inline">slicev</code> <i>(wrap arbitrary arguments)</i>, <code class="inline">slicea</code> <i>(take a sectionn of a dynamic array)</i>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Array constructors: <code class="inline">arrayCreate</code>, <code class="inline">arrayCreateA</code>, <code class="inline">arrayDestroy</code>, <code class="inline">arrayClone</code>, <code class="inline">arrayCloneA</code>, <code class="inline">arrayWrap</code>, <code class="inline">arrayWrap_var</code>, <code class="inline">arrayFrom</code>, <code class="inline">arrayFromA</code>, <code class="inline">arrayFrom_var</code>, <code class="inline">arrayFromA_var</code>. <b>The </b><b><code class="inline">wrap</code></b><b> functions don't allocate any data but directly use the provided array, the resulting array is thus not necessarily safe when used with memory manipulating functions (especially in the case of wrapped static array)</b>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Accessors: <code class="inline">arrayFirst</code> <i>(pointer to first element)</i>, <code class="inline">arrayLast</code> <i>(pointer to last element)</i>, <code class="inline">arrayAt</code> <i>(pointer to element at index)</i>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Data insertion/deletion: <code class="inline">arrayInsert_range</code> <i>(insert within the array)</i>, <code class="inline">arrayInsert</code>, <code class="inline">arrayInsert_var</code>, <code class="inline">arrayAdd_range</code> <i>(insert at end of array)</i>, <code class="inline">arrayAdd</code>, <code class="inline">arrayAdd_var</code>, <code class="inline">arrayCat</code> <i>(concatenation)</i>, <code class="inline">arrayRemove_range</code> <i>(remove within the array)</i>, <code class="inline">arrayRemove</code>, <code class="inline">arrayRemove_unordered</code> <i>(remove without keeping order (faster than ordered remove))</i>, <code class="inline">arrayPop</code> <i>(remove and return value)</i>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Data rearanging: <code class="inline">arraySort</code> <i>(using quicksort)</i>, <code class="inline">arrayFill</code> <i>(set all elements to same value)</i>, <code class="inline">arrayReserve</code> <i>(pre-allocate certain capacity)</i>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Printing and putting: <code class="inline">arrayPrintf_full</code>, <code class="inline">arrayPrintf</code>, <code class="inline">putArray_full</code>, <code class="inline">putArray</code>.<br/>
+                        
+                    </p>
+                </li>
+            </ul>
+            <p>
+                In addition, the <code class="inline">aforeach</code> loop is introduced as a simpler replacement for a <code class="inline">for</code> loop across every element:
+            </p>
+            <pre class="code-box"><code class="language-c">// Create a static array 
+SL_slice(iv2) vectors = SL_slicev(iv2, iv2_right, iv2_up, iv2_one);
+
+// Print the array before the loop
+SL_put("[BEFORE LOOP] vectors = ", SL_putArray_full(vectors, FMT_V2("%d"), vector, XPD_V2(*vector)), "\n");
+// Expect: "[BEFORE LOOP] vectors = array[v2(1, 0), v2(0, 1), v2(1, 1)]\n"
+
+SL_aforeach(var, vectors) // Litteraly "for each `vector` in `vector` do {...}"
+{
+    if (aindex(var) == 1 &amp&amp var->y == 0) *var = iv2_(5, 5);
+    //  ~~~~~~~~~~~~~~
+    //  Litteraly "index of variable `vector` in the looping array" 
+}
+// Print the array after the loop
+SL_put("[AFTER LOOP] vectors = ", SL_putArray_full(vectors, FMT_V2("%d"), vector, XPD_V2(*vector)), "\n");
+// Expect: "[AFTER LOOP] vectors = array[v2(1, 0), v2(5, 5), v2(1, 1)]\n"
+//                                                 ~~~~~~~~</code></pre>
+            <p>
+                <code class="inline">aforeach</code> related additions:<br/>
+                
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        <code class="inline">aindex</code> <i>(index of loop variable in loop array)</i>
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">aindex_in</code> <i>(index of a variable in an array)</i>
+                    </p>
+                </li>
+            </ul>
+            <h3><span class="anchor" id="list.h"></span><i>list.h</i> <a class="text-dim" href="#list.h">#</a></h3>
+            <p>
+                This file defines the linked list type (<code class="inline">list(T)</code>) and the doubly linked list type (<code class="inline">dlist(T)</code>), as well as some functions to manipulate them in a type independent manner. Every function appart from constructors can be called with linked lists and doubly linked lists indiscriminetly. To define a new list, use the declarative macro:
+            </p>
+            <pre class="code-box"><code class="language-c">// Define an list and a dlist of type T
+SL_DEF_LIST(T);
+
+// The list type and dlist type can now be accessed using
+SL_list(T)  list  = {0}; // Empty list is a valid list
+SL_dlist(T) dlist = SL_dlistCreateA(T, ...); // Create list with allocator assigned
+
+// The `SL_list(T)` and `SL_dlist(T)` types have the following definitions :
+typedef struct T_list_node { 
+    struct T_list_node *next;
+    T data; 
+} T_list_node;
+typedef struct SL_list(T) { 
+    T_list_node *first, *last; 
+    usize count; 
+    sl_allocator *alloc; 
+} SL_list(T);
+
+typedef struct T_dlist_node {
+    struct T_dlist_node *next, *prev; 
+    type data;
+} T_dlist_node;
+typedef struct SL_dlist(T) {
+    T_dlist_node *first, *last; 
+    usize count; 
+    sl_allocator *alloc; 
+} SL_dlist(T)</code></pre>
+            <p>
+                The list and dlist types have the same structure, only the associated node structures change to either only reference the next item <i>(list)</i> or both the previous and next item <i>(dlist)</i>.
+            </p>
+            <p>
+                The array implements the following functions :
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        Constructors/Destructors: <code class="inline">listCreateA</code>, <code class="inline">dlistCreateA</code>, <code class="inline">listClear</code>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Accessors: <code class="inline">listFirst</code> <i>(pointer to first element)</i>, <code class="inline">listLast</code> <i>(pointer to last element)</i>, <code class="inline">listAt</code> <i>(pointer to element at index)</i>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Data insertion/deletion: <code class="inline">listInsert</code> <i>(insert within the list)</i>, <code class="inline">listAdd</code> <i>(insert at end of list)</i>, <code class="inline">listAdd_first</code> <i>(insert at start of list)</i>, <code class="inline">listRemove</code> <i>(remove within the list)</i>, <code class="inline">listRemove_ref</code>, <code class="inline">listPop</code> <i>(remove and return value)</i>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Printing and putting: <code class="inline">listPrintf_full</code>, <code class="inline">listPrintf</code>, <code class="inline">putList_full</code>, <code class="inline">putList</code>.
+                    </p>
+                </li>
+            </ul>
+            <p>
+                In addition, the <code class="inline">lforeach</code> loop is introduced as a simpler replacement for a <code class="inline">for</code> loop across every element :
+            </p>
+            <pre class="code-box"><code class="language-c">// Create a simple linked list 
+SL_list(iv2) vectors = {0};
+SL_listAdd(vectors, iv2_right);
+SL_listAdd(vectors, iv2_up);
+SL_listAdd(vectors, iv2_one);
+
+// Print the list before the loop
+SL_put("[BEFORE LOOP] vectors = ", SL_putList_full(vectors, FMT_V2("%d"), vector, XPD_V2(*vector)), "\n");
+// Expect: "[BEFORE LOOP] vectors = list[v2(1, 0), v2(0, 1), v2(1, 1)]\n"
+
+SL_lforeach(var, vectors) // Litteraly "for each `vector` in `vector` do {...}"
+{
+    if (lindex(var) == 1 &amp&amp var->y == 0) *var = iv2_(5, 5);
+    //  ~~~~~~~~~~~~~~
+    //  Litteraly "index of variable `vector` in the looping list" 
+}
+// Print the list after the loop
+SL_put("[AFTER LOOP] vectors = ", SL_putList_full(vectors, FMT_V2("%d"), vector, XPD_V2(*vector)), "\n");
+// Expect: "[AFTER LOOP] vectors = list[v2(1, 0), v2(5, 5), v2(1, 1)]\n"
+//                                                 ~~~~~~~~</code></pre>
+            <p>
+                <code class="inline">lforeach</code> related additions:
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        <code class="inline">lindex</code> <i>(index of loop variable in loop array)</i>
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">lnext</code> <i>(pointer to element after loop variable)</i>
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        <code class="inline">dlprev</code> <i>(pointer to element before loop variable)</i>
+                    </p>
+                </li>
+            </ul>
+            <h3><span class="anchor" id="dict.h"></span><i>dict.h</i> <a class="text-dim" href="#dict.h">#</a></h3>
+            <p>
+                This file defines the dictionnary type (<code class="inline">dict(K, T)</code>) as well as some functions to manipulate them in a type independent manner.To define a new dictionnary, use the declarative macro:
+            </p>
+            <pre class="code-box"><code class="language-c">// Define a dictionnary with key of type K and value of type T
+SL_DEF_DICT(K, T);
+
+// The dict type can now be accessed using
+SL_dict(K, T) dict = SL_dictCreate(K, T, ...); // Create a dictionnary with pre-allocated buckets
+
+// The `SL_dict(K, T)` type has the following definition :
+typedef struct SL_dict(K, T)_bucket { 
+    struct SL_dict(K, T)_bucket *next; 
+    K key;
+    T value;
+} SL_dict(K, T)_bucket; // Basicaly a linked list node
+
+typedef struct SL_dict(K, T) {
+    SL_dict(K, T)_bucket **data;
+    usize count, capa;
+    SL_allocator *alloc;
+    
+    usize (*hash)(const K *);
+    int   (*cmp)(const K *, const K *);
+} SL_dict(K, T)</code></pre>
+            <p>
+                The dictionnary keeps track of a key comparison function and a key hashing function. When using the standard constructors, the functions declared using <code class="inline">DEF_CMP_FUNC</code> and <code class="inline">DEF_HASH_FUNC</code> for the considered key type. These can be overriden using <code class="inline">dictCreate_full</code> :
+            </p>
+            <pre class="code-box"><code class="language-c">SL_DEF_CMP_FUNC(K, key_a, key_b) {
+    return *key_a == *key_b;
+}
+SL_DEF_HASH_FUNC(K, key) {
+    return (usize)key ^ ((usize)key &lt&lt 8);
+}
+
+SL_dict(K, T) dict_basic = SL_dictCreate(K, T, 256);
+// &lt=>
+SL_dict(K, T) dict_specific = SL_dictCreate_full(K, T, K_cmp, K_hash, 256);</code></pre>
+            <p>
+                The array implements the following functions :
+            </p>
+            <ul>
+                <li>
+                    <p>
+                        Constructors/Destructors: <code class="inline">dictCreate</code>, <code class="inline">dictCreate_full</code> <i>(specify hash and comparison functions)</i>, <code class="inline">dictCreateA</code>, <code class="inline">dictCreateA_full</code>, <code class="inline">dictClear</code> <i>(free buckets)</i>, <code class="inline">dictDestroy</code> <i>(free every resource taken by dict)</i>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Data accessing/insertion/deletion: <code class="inline">dictGet</code> <i>(pointer to element associated with a key)</i>, <code class="inline">dictAdd</code> <i>(insert value associated with a key)</i>, <code class="inline">dictRemove</code> <i>(remove value associated with a key)</i>, <code class="inline">dictKey</code> <i>(get key associated with value reference)</i>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Using dictionnary functions: <code class="inline">dictHash</code> <i>(use dict's hash function)</i>, <code class="inline">dictHash2</code>, <code class="inline">dictCmp</code> <i>(use dict's comparison function)</i>, <code class="inline">dictCmp2</code>.
+                    </p>
+                </li>
+                <li>
+                    <p>
+                        Printing and putting: 
+                    </p>
+                    <hgroup>
+                        <h3>/!\ TO COMPLETE /!\</h3>
+                    </hgroup>
+                </li>
+            </ul>
+            <p>
+                In addition, the <code class="inline">dforeach</code> loop is introduced as a simpler replacement for a <code class="inline">for</code> loop across every element :
+            </p>
+            <pre class="code-box"><code class="language-c">SL_dict(SL_ptr(char), iv2) vectors = SL_dictCreate(SL_ptr(char), iv2, 3);
+SL_dictAdd(vectors, "right", iv2_right);
+SL_dictAdd(vectors, "up",    iv2_up);
+SL_dictAdd(vectors, "one",   iv2_one);
+
+SL_dforeach(pair, vectors) // Litteraly "for each `pair` in `vectors` do {...}"
+{
+    if (SL_dictCmp(pair->key, "up") &amp&amp pair->value.y == 0) pair->value = iv2_(5, 5);
+}</code></pre>
             <hgroup>
                 <h3>/!\ TODO: CONTINUE /!\</h3>
             </hgroup>
